@@ -18,7 +18,7 @@ html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#f
 <div id="stage"><div id="aiModal">
 <h3 style="margin:0 0 8px">Renderização com IA</h3>
 <div id="aiNote">A cena atual será enviada como referência para o seu Cloudflare Worker. A IA deve preservar o desenho dos móveis e melhorar materiais, iluminação e realismo.</div>
-<div class="row"><label>URL do Worker<input id="workerUrl" type="url" value="https://render-e-ilumina-o.walisons321.trabalhadores.dev" readonly></label></div>
+<div class="row"><label>URL do Worker<input id="workerUrl" type="url" value="https://render-e-ilumina-o.walisons321.workers.dev" readonly></label></div>
 <label>Instrução para o render<textarea id="aiPrompt">Transforme esta cena 3D de móveis planejados em uma fotografia arquitetônica fotorrealista. Preserve rigorosamente a geometria, quantidade, posição, proporções, portas, gavetas, cores e materiais dos móveis. Não invente nem remova módulos. Melhore apenas iluminação, sombras, reflexos, textura dos materiais e realismo do ambiente. Fotografia de interiores profissional, perspectiva natural, alta definição.</textarea></label>
 <div class="row"><button id="runAI" class="primary">Gerar render IA</button><button id="closeAI" class="danger">Fechar</button></div>
 <div id="aiStatus" style="font-size:13px;color:#ddd">Worker de IA configurado e pronto para uso.</div>
