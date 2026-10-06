@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "render-e-ilumina-o",
+  "main": "cloudflare-worker.js",
+  "compatibility_date": "2026-10-06",
+  "ai": {
+    "binding": "AI"
+  }
+}
