@@ -1,33 +1,34 @@
 export default {
   async fetch(request, env) {
-    // Permite que o GitHub Pages acesse este Worker
-    const cors = {
+
+    const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Methods": "POST, OPTIONS"
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
     };
 
-    // Responde à verificação CORS do navegador
+    // Libera a comunicação com o GitHub Pages
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: cors
+        headers: corsHeaders
       });
     }
 
-    // O Worker recebe apenas requisições POST
+    // Este endereço funciona apenas como API
     if (request.method !== "POST") {
       return new Response("Use POST", {
         status: 405,
-        headers: cors
+        headers: corsHeaders
       });
     }
 
     try {
-      // Verifica se o Workers AI está conectado
+
+      // Verifica se o binding Workers AI existe
       if (!env.AI) {
         throw new Error(
-          "Binding AI não encontrado. Verifique a configuração do Workers AI."
+          "O binding AI não foi encontrado no Cloudflare Worker."
         );
       }
 
@@ -35,103 +36,146 @@ export default {
       const body = await request.json();
 
       const image = body.image;
-      const prompt = body.prompt;
+      const userPrompt = body.prompt;
 
       if (!image) {
-        return new Response("Imagem da cena ausente", {
-          status: 400,
-          headers: cors
-        });
+        return new Response(
+          "A imagem da cena não foi recebida.",
+          {
+            status: 400,
+            headers: corsHeaders
+          }
+        );
       }
 
-      // Remove o início do Data URL e mantém somente o Base64
+      // Remove o cabeçalho:
+      // data:image/png;base64,
       const image_b64 = image.replace(
         /^data:image\/[a-zA-Z0-9.+-]+;base64,/,
         ""
       );
 
       if (!image_b64) {
-        return new Response("Imagem inválida", {
-          status: 400,
-          headers: cors
-        });
+        throw new Error(
+          "A imagem recebida está vazia ou em formato inválido."
+        );
       }
 
-      // Instrução padrão para preservar o projeto
-      const renderPrompt =
-        prompt ||
+      /*
+       * Prompt principal
+       *
+       * O objetivo é aumentar o realismo sem redesenhar
+       * os móveis criados no Marcenaria 3D.
+       */
+      const prompt =
+        userPrompt ||
         `
-Photorealistic architectural interior visualization.
+Photorealistic architectural interior photography.
+
+Use the supplied 3D scene as the exact visual reference.
+
+Preserve the original furniture design.
 
 Preserve exactly:
-- furniture geometry
-- furniture dimensions and proportions
-- furniture position
-- doors
-- drawers
-- shelves
-- modules
-- colors
-- materials
-- camera angle
-- room layout
+furniture geometry,
+dimensions,
+proportions,
+position,
+camera angle,
+doors,
+drawers,
+shelves,
+handles,
+modules,
+colors,
+materials,
+walls and room layout.
 
+Do not redesign the furniture.
 Do not add furniture.
 Do not remove furniture.
-Do not change the design.
+Do not change furniture proportions.
+Do not change the camera composition.
 
 Improve only:
-- realistic lighting
-- shadows
-- reflections
-- MDF material appearance
-- ambient illumination
-- depth
-- photographic realism
+realistic architectural lighting,
+natural shadows,
+ambient illumination,
+reflections,
+MDF surface realism,
+wood texture realism,
+depth,
+material definition,
+photographic quality.
 
 Professional interior design photography.
-High quality architectural visualization.
+Realistic architectural visualization.
+Natural lighting.
+High detail.
         `.trim();
 
-      // Renderização Image-to-Image
+      /*
+       * CLOUDFLARE WORKERS AI
+       *
+       * Utilizamos a imagem capturada do projeto
+       * como referência para a geração.
+       */
       const result = await env.AI.run(
-        "@cf/runwayml/stable-diffusion-v1-5-img2img",
+        "@cf/runwayml/stable-diffusion-v1-5-inpainting",
         {
-          prompt: renderPrompt,
+          prompt: prompt,
+
           image_b64: image_b64,
 
-          // Quanto menor, mais próximo do projeto original
-          strength: 0.30,
+          /*
+           * Valor baixo para tentar preservar
+           * melhor a geometria original.
+           */
+          strength: 0.25,
 
-          // Intensidade com que a IA segue o prompt
-          guidance: 8.0,
+          guidance: 8,
 
-          // Qualidade / quantidade de etapas
           num_steps: 20
         }
       );
 
-      // Devolve a imagem renderizada para o Marcenaria 3D
+      if (!result) {
+        throw new Error(
+          "O Workers AI não retornou nenhuma imagem."
+        );
+      }
+
+      /*
+       * O modelo retorna os bytes da imagem.
+       * Enviamos diretamente para o Marcenaria 3D.
+       */
       return new Response(result, {
         status: 200,
         headers: {
-          ...cors,
+          ...corsHeaders,
           "Content-Type": "image/png",
           "Cache-Control": "no-store"
         }
       });
 
     } catch (error) {
-      console.error("Erro ao gerar render:", error);
+
+      console.error("ERRO RENDER IA:", error);
+
+      const message =
+        error?.message ||
+        String(error) ||
+        "Erro desconhecido";
 
       return new Response(
-        "Erro no Worker: " +
-          (error?.message || String(error)),
+        "Erro no Worker: " + message,
         {
           status: 500,
           headers: {
-            ...cors,
-            "Content-Type": "text/plain; charset=UTF-8"
+            ...corsHeaders,
+            "Content-Type":
+              "text/plain; charset=UTF-8",
+            "Cache-Control": "no-store"
           }
         }
       );
