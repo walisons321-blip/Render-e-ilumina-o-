@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Marcenaria 3D — GLB</title>
+<style>
+html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#fff;overflow:hidden}#app{height:100%;display:grid;grid-template-rows:auto 1fr auto}header{padding:10px 12px;background:#222;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,label.btn{background:#f2f2f2;color:#111;border:0;border-radius:9px;padding:9px 11px;font-weight:700;font-size:14px}input[type=file]{display:none}#stage{position:relative;min-height:0}canvas{display:block;width:100%;height:100%}#panel{background:#222;padding:9px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#panel label{font-size:11px;color:#bbb}#panel input{width:100%;box-sizing:border-box;margin-top:3px;padding:7px;border:0;border-radius:7px}#status{font-size:12px;color:#bbb;flex:1;min-width:120px}#materials{background:#222;padding:10px;border-top:1px solid #333;overflow:auto}#materials .matgrid{grid-template-columns:repeat(6,minmax(80px,1fr))}#materials h3{margin:0 0 8px;font-size:14px}.matgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mat{border:1px solid #555;background:#333;color:#fff;border-radius:8px;padding:6px;font-size:11px}.sw{height:38px;border-radius:6px;margin-bottom:4px;background-size:cover;background-position:center}#materials small{color:#aaa}#aiModal{position:absolute;inset:12px;background:#171717f5;border:1px solid #555;border-radius:14px;z-index:20;padding:14px;display:none;overflow:auto}#aiModal.open{display:block}#aiModal textarea,#aiModal input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #555;background:#292929;color:#fff;font-size:14px}#aiModal textarea{min-height:90px;resize:vertical}#aiModal .row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}#aiModal .row>*{flex:1;min-width:130px}#aiPreview{width:100%;max-height:48vh;object-fit:contain;background:#0d0d0d;border-radius:10px;margin-top:10px;display:none}#aiNote{font-size:12px;color:#bbb;line-height:1.35}.primary{background:#ffd36a!important}.danger{background:#444!important;color:#fff!important}
+</style>
+</head>
+<body><div id="app">
+<header>
+<label class="btn">Adicionar GLB/GLTF<input id="file" type="file" accept=".glb,.gltf" /></label>
+<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
+<input id="texture" type="file" accept="image/*"/><label class="btn" for="texture">+ Material MDF</label>
+<span id="status">Toque em um módulo para editar.</span>
+</header>
+<div id="stage"><div id="aiModal">
+<h3 style="margin:0 0 8px">Renderização com IA</h3>
+<div id="aiNote">A cena será enviada como referência para a IA em tamanho otimizado. O objetivo é preservar o projeto e melhorar materiais, iluminação e realismo.</div>
+<div class="row"><label>URL do Worker<input id="workerUrl" type="url" value="https://render-e-ilumina-o.walisons321.workers.dev" readonly></label></div>
+<label>Instrução para o render<textarea id="aiPrompt">Transforme esta cena 3D de móveis planejados em uma fotografia arquitetônica fotorrealista. Preserve rigorosamente a câmera, perspectiva, geometria, quantidade, posição, proporções, portas, gavetas, cores e materiais dos móveis. Não invente, remova, mova ou redesenhe módulos. Melhore somente o realismo: iluminação arquitetônica equilibrada, sombras de contato, reflexos naturais, MDF realista, madeira realista, pedra e metais realistas. Evite tonalidade laranja, excesso de exposição e aparência plástica. Fotografia profissional de interiores, alta definição.</textarea></label>
+<div class="row"><label>Qualidade do render<select id="aiMode" style="width:100%;padding:10px;border-radius:8px;background:#292929;color:white;border:1px solid #555"><option value="economy">Econômico — FLUX 4B</option><option value="quality">Qualidade — FLUX 9B</option></select></label></div>
+<div class="row"><button id="runAI" class="primary">Gerar render IA</button><button id="closeAI" class="danger">Fechar</button></div>
+<div id="aiStatus" style="font-size:13px;color:#ddd">Worker de IA configurado e pronto para uso.</div>
+<img id="aiPreview" alt="Prévia do render gerado por IA">
+<div class="row"><button id="saveAI" disabled>Salvar / Compartilhar</button><button id="openAI" disabled>Abrir imagem</button><button id="againAI" disabled>Renderizar novamente</button></div>
+</div></div>
+<div id="panel">
+<label>Largura (m)<input id="sx" type="number" step="0.05" value="1"></label>
+<label>Altura (m)<input id="sy" type="number" step="0.05" value="1"></label>
+<label>Profundidade (m)<input id="sz" type="number" step="0.05" value="1"></label>
+<label>Posição X (m)<input id="px" type="number" step="0.05" value="0"></label>
+<label>Posição Y (m)<input id="py" type="number" step="0.05" value="0"></label>
+<label>Posição Z (m)<input id="pz" type="number" step="0.05" value="0"></label>
+<label>Rotação Y (°)<input id="ry" type="number" step="5" value="0"></label>
+<label>Intensidade da luz<input id="lightIntensity" type="range" min="0" max="20" step="0.1" value="5"></label>
+<label>Claridade geral<input id="ambientIntensity" type="range" min="0" max="5" step="0.1" value="1.2"></label>
+<label>Cor da luz<input id="lightColor" type="color" value="#fff1d6"></label>
+</div>
+<div id="materials"><h3>Materiais</h3><div class="matgrid" id="matgrid"></div><small>Selecione um móvel e toque no material. Você também pode adicionar uma imagem de MDF.</small></div>
+</div>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.170.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {TransformControls} from 'three/addons/controls/TransformControls.js';
+const stage=document.querySelector('#stage'), status=document.querySelector('#status');
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0xdedbd3);
+const camera=new THREE.PerspectiveCamera(50,1,.01,100); camera.position.set(4,3,5);
+const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.target.set(0,1,0);
+const transform=new TransformControls(camera,renderer.domElement); scene.add(transform); transform.setMode('translate'); transform.addEventListener('dragging-changed',e=>controls.enabled=!e.value); transform.addEventListener('objectChange',()=>syncFields());
+const ambient=new THREE.HemisphereLight(0xffffff,0x666666,1.2); scene.add(ambient); const dl=new THREE.DirectionalLight(0xffffff,3); dl.position.set(3,6,4); dl.castShadow=true; scene.add(dl);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0xb8b2a7,roughness:.9})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+const grid=new THREE.GridHelper(20,40,0x777777,0xaaaaaa); grid.position.y=.002; scene.add(grid);
+let selected=null; const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
+const materialDefs=[
+ {name:'Branco',color:'#f4f4f1'},{name:'Areia',color:'#d8c7aa'},{name:'Cinza',color:'#8d8d89'},
+ {name:'Preto',color:'#252525'},{name:'Carvalho',color:'#b88a55'},{name:'Freijó',color:'#a87543'}
+];
+const matgrid=document.querySelector('#matgrid');
+function applyMaterial(mat){if(!selected){status.textContent='Selecione um móvel primeiro.';return}selected.traverse(o=>{if(o.isMesh){o.material=mat.clone();o.material.needsUpdate=true}});status.textContent='Material aplicado ao módulo selecionado.'}
+function addMaterialButton(name,css,onClick){const b=document.createElement('button');b.className='mat';const sw=document.createElement('div');sw.className='sw';sw.style.background=css;b.append(sw,document.createTextNode(name));b.onclick=onClick;matgrid.appendChild(b)}
+materialDefs.forEach(m=>addMaterialButton(m.name,m.color,()=>applyMaterial(new THREE.MeshStandardMaterial({color:m.color,roughness:.65}))));
+
+function fit(){const r=stage.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix()} addEventListener('resize',fit); fit();
+function syncFields(){if(!selected)return;document.querySelector('#sx').value=selected.scale.x.toFixed(2);document.querySelector('#sy').value=selected.scale.y.toFixed(2);document.querySelector('#sz').value=selected.scale.z.toFixed(2);document.querySelector('#px').value=selected.position.x.toFixed(2);document.querySelector('#py').value=selected.position.y.toFixed(2);document.querySelector('#pz').value=selected.position.z.toFixed(2);document.querySelector('#ry').value=THREE.MathUtils.radToDeg(selected.rotation.y).toFixed(1)}
+function select(o){selected=o; status.textContent=o?(o.userData.isLight?'Luz selecionada. Mova e ajuste intensidade/cor abaixo.':'Módulo selecionado. Use Mover/Rotacionar ou os campos abaixo.'):'Nenhum objeto selecionado.'; transform.detach(); if(o){transform.attach(o);syncFields();syncLightFields()}}
+function addBox(){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xd9c5a0,roughness:.65}));m.position.set(0,.5,0);m.castShadow=m.receiveShadow=true;m.userData.editable=true;scene.add(m);select(m)}
+document.querySelector('#addBox').onclick=addBox;
+function addLight(){
+ const group=new THREE.Group(); group.userData.editable=true; group.userData.isLight=true;
+ const light=new THREE.PointLight(0xfff1d6,5,12,2); light.position.set(0,0,0); light.castShadow=true; group.add(light);
+ const bulb=new THREE.Mesh(new THREE.SphereGeometry(.08,16,12),new THREE.MeshBasicMaterial({color:0xfff1d6})); bulb.userData.lightHelper=true; group.add(bulb);
+ group.position.set(0,2.4,1); scene.add(group); select(group); transform.setMode('translate'); status.textContent='Luz adicionada. Mova-a e ajuste intensidade/cor abaixo.'; syncLightFields();
+}
+function selectedLight(){if(!selected||!selected.userData.isLight)return null;return selected.children.find(o=>o.isPointLight)}
+function syncLightFields(){const l=selectedLight(); if(!l)return; document.querySelector('#lightIntensity').value=l.intensity; document.querySelector('#lightColor').value='#'+l.color.getHexString()}
+document.querySelector('#addLight').onclick=addLight;
+document.querySelector('#lightIntensity').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para ajustar a intensidade.';return}l.intensity=+e.target.value};
+document.querySelector('#ambientIntensity').oninput=e=>{ambient.intensity=+e.target.value;status.textContent='Claridade geral do ambiente ajustada.'};
+document.querySelector('#lightColor').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para mudar a cor.';return}l.color.set(e.target.value);const b=selected.children.find(o=>o.userData.lightHelper);if(b)b.material.color.set(e.target.value)};
+document.querySelector('#move').onclick=()=>{transform.setMode('translate');status.textContent='Modo mover: arraste as setas do objeto.'};
+document.querySelector('#rotate').onclick=()=>{transform.setMode('rotate');status.textContent='Modo rotacionar: arraste os arcos do objeto.'};
+document.querySelector('#renderBtn').onclick=()=>{
+  const oldGrid=grid.visible, oldTransform=transform.visible; const helpers=[]; scene.traverse(o=>{if(o.userData&&o.userData.lightHelper){helpers.push([o,o.visible]);o.visible=false}});
+  grid.visible=false; transform.visible=false;
+  renderer.render(scene,camera);
+  try{
+    const data=renderer.domElement.toDataURL('image/png',1.0);
+    const a=document.createElement('a'); a.href=data; a.download='render-marcenaria-3d.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    status.textContent='Render gerado em PNG. No iPhone, confira Downloads/Arquivos.';
+  }catch(err){status.textContent='Não foi possível gerar o render: '+err.message}
+  grid.visible=oldGrid; transform.visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
+};
+
+function captureSceneDataURL(maxSide=500){
+  const oldGrid=grid.visible, oldTransform=transform.visible; const helpers=[];
+  scene.traverse(o=>{if(o.userData&&o.userData.lightHelper){helpers.push([o,o.visible]);o.visible=false}});
+  grid.visible=false; transform.visible=false; renderer.render(scene,camera);
+  const source=renderer.domElement;
+  const scale=Math.min(1,maxSide/Math.max(source.width,source.height));
+  const w=Math.max(1,Math.round(source.width*scale)), h=Math.max(1,Math.round(source.height*scale));
+  const temp=document.createElement('canvas'); temp.width=w; temp.height=h;
+  temp.getContext('2d').drawImage(source,0,0,w,h);
+  const data=temp.toDataURL('image/png',1.0);
+  grid.visible=oldGrid; transform.visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
+  return data;
+}
+function dataURLToBlob(dataURL){
+  const [head,b64]=dataURL.split(','); const mime=(head.match(/data:(.*?);/)||[])[1]||'image/png';
+  const bin=atob(b64), bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new Blob([bytes],{type:mime});
+}
+async function saveOrShare(dataURL){
+  const blob=dataURLToBlob(dataURL); const file=new File([blob],'render-ia-marcenaria.png',{type:blob.type});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:'Render Marcenaria 3D'});return}catch(e){if(e.name==='AbortError')return}
+  }
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='render-ia-marcenaria.png';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+const aiModal=document.querySelector('#aiModal'), aiStatus=document.querySelector('#aiStatus'), aiPreview=document.querySelector('#aiPreview');
+let lastAIImage='';
+document.querySelector('#aiRenderBtn').onclick=()=>{aiModal.classList.add('open')};
+document.querySelector('#closeAI').onclick=()=>aiModal.classList.remove('open');
+async function runAIRender(){
+ const workerUrl=document.querySelector('#workerUrl').value.trim(); const prompt=document.querySelector('#aiPrompt').value.trim();
+ if(!workerUrl){aiStatus.textContent='Cole a URL do Cloudflare Worker para continuar.';return}
+ document.querySelector('#runAI').disabled=true; document.querySelector('#againAI').disabled=true; aiStatus.textContent='Capturando a cena e enviando para a IA…';
+ try{
+   const image=captureSceneDataURL(500);
+   const res=await fetch(workerUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,prompt,mode:document.querySelector('#aiMode').value})});
+   if(!res.ok) throw new Error((await res.text())||('HTTP '+res.status));
+   const ct=res.headers.get('content-type')||''; let dataUrl='';
+   if(ct.startsWith('image/')){const blob=await res.blob();dataUrl=await new Promise((ok,fail)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=fail;r.readAsDataURL(blob)})}
+   else {const j=await res.json(); dataUrl=j.image||j.dataURI||j.result||''; if(dataUrl&&!dataUrl.startsWith('data:'))dataUrl='data:image/png;base64,'+dataUrl}
+   if(!dataUrl)throw new Error('O Worker não retornou uma imagem.');
+   lastAIImage=dataUrl; aiPreview.src=dataUrl; aiPreview.style.display='block'; document.querySelector('#saveAI').disabled=false; document.querySelector('#openAI').disabled=false; document.querySelector('#againAI').disabled=false; aiStatus.textContent='Render concluído. No iPhone, use Salvar / Compartilhar ou Abrir imagem.';
+ }catch(err){aiStatus.textContent='Falha no render IA: '+err.message}
+ finally{document.querySelector('#runAI').disabled=false}
+}
+document.querySelector('#runAI').onclick=runAIRender; document.querySelector('#againAI').onclick=runAIRender;
+document.querySelector('#saveAI').onclick=async()=>{if(!lastAIImage)return;try{await saveOrShare(lastAIImage)}catch(e){aiStatus.textContent='Não foi possível salvar: '+e.message}};
+document.querySelector('#openAI').onclick=()=>{if(!lastAIImage)return;const blob=dataURLToBlob(lastAIImage);const url=URL.createObjectURL(blob);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),60000)};
+
+renderer.domElement.addEventListener('pointerdown',e=>{const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&h.object!==grid);if(hits.length){let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o.userData.editable?o:hits[0].object)} });
+['sx','sy','sz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.scale[['x','y','z'][i]]=Math.max(.05,+e.target.value||.05); if(i===1 && selected.geometry) selected.position.y=selected.scale.y/2});
+['px','py','pz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.position[['x','y','z'][i]]=+e.target.value||0});
+document.querySelector('#ry').oninput=e=>{if(!selected)return;selected.rotation.y=THREE.MathUtils.degToRad(+e.target.value||0)};
+document.querySelector('#delete').onclick=()=>{if(selected){transform.detach();scene.remove(selected);select(null)}};
+document.querySelector('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);new GLTFLoader().load(url,g=>{g.scene.userData.editable=true;g.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});scene.add(g.scene);select(g.scene);URL.revokeObjectURL(url)},undefined,err=>status.textContent='Erro ao abrir modelo: '+err.message)};
+document.querySelector('#texture').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!selected){status.textContent='Selecione um móvel antes de adicionar o material.';e.target.value='';return}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1);const mat=new THREE.MeshStandardMaterial({map:t,roughness:.65});applyMaterial(mat);addMaterialButton(f.name,'url('+url+')',()=>applyMaterial(mat));status.textContent='Material adicionado: '+f.name},undefined,err=>status.textContent='Erro ao carregar material: '+err.message);e.target.value=''};
+addBox(); (function loop(){requestAnimationFrame(loop);controls.update();renderer.render(scene,camera)})();
+</script></body></html>
