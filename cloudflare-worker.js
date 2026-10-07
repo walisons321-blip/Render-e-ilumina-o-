@@ -1,125 +1,95 @@
 export default {
   async fetch(request, env) {
-
-    const corsHeaders = {
+    const cors = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Methods": "POST, OPTIONS"
     };
 
-    // Libera a comunicação com o GitHub Pages
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders
+        headers: cors
       });
     }
 
-    // Este endereço funciona apenas como API
     if (request.method !== "POST") {
       return new Response("Use POST", {
         status: 405,
-        headers: corsHeaders
+        headers: cors
       });
     }
 
     try {
-
-      // Verifica se o binding Workers AI existe
       if (!env.AI) {
-        throw new Error(
-          "O binding AI não foi encontrado no Cloudflare Worker."
-        );
+        throw new Error("Binding AI não encontrado.");
       }
 
-      // Recebe os dados enviados pelo Marcenaria 3D
       const body = await request.json();
 
-      const image = body.image;
-      const userPrompt = body.prompt;
-
-      if (!image) {
-        return new Response(
-          "A imagem da cena não foi recebida.",
-          {
-            status: 400,
-            headers: corsHeaders
-          }
-        );
+      if (!body.image) {
+        throw new Error("Imagem da cena não recebida.");
       }
 
-      // Remove o cabeçalho:
-      // data:image/png;base64,
-      const image_b64 = image.replace(
+      // Remove "data:image/png;base64,"
+      const image_b64 = body.image.replace(
         /^data:image\/[a-zA-Z0-9.+-]+;base64,/,
         ""
       );
 
       if (!image_b64) {
-        throw new Error(
-          "A imagem recebida está vazia ou em formato inválido."
-        );
+        throw new Error("Imagem Base64 inválida.");
       }
 
       /*
-       * Prompt principal
-       *
-       * O objetivo é aumentar o realismo sem redesenhar
-       * os móveis criados no Marcenaria 3D.
+       * Converte o Base64 da imagem para bytes.
+       * A Cloudflare documenta o campo "mask"
+       * como um array de bytes (0-255).
        */
+      const binary = atob(image_b64);
+
+      const mask = new Array(binary.length);
+
+      for (let i = 0; i < binary.length; i++) {
+        mask[i] = binary.charCodeAt(i);
+      }
+
       const prompt =
-        userPrompt ||
+        body.prompt ||
         `
-Photorealistic architectural interior photography.
+Photorealistic architectural interior render.
 
-Use the supplied 3D scene as the exact visual reference.
+Preserve the supplied 3D scene.
 
-Preserve the original furniture design.
-
-Preserve exactly:
+Keep exactly:
 furniture geometry,
 dimensions,
 proportions,
-position,
-camera angle,
+positions,
 doors,
 drawers,
 shelves,
-handles,
 modules,
-colors,
-materials,
-walls and room layout.
+camera angle,
+colors and materials.
 
-Do not redesign the furniture.
 Do not add furniture.
 Do not remove furniture.
-Do not change furniture proportions.
-Do not change the camera composition.
+Do not redesign the furniture.
 
-Improve only:
-realistic architectural lighting,
+Improve:
+realistic lighting,
 natural shadows,
-ambient illumination,
 reflections,
-MDF surface realism,
-wood texture realism,
-depth,
-material definition,
-photographic quality.
+MDF textures,
+wood textures,
+material realism,
+ambient illumination,
+depth and photographic quality.
 
-Professional interior design photography.
-Realistic architectural visualization.
-Natural lighting.
-High detail.
+Professional architectural visualization.
         `.trim();
 
-      /*
-       * CLOUDFLARE WORKERS AI
-       *
-       * Utilizamos a imagem capturada do projeto
-       * como referência para a geração.
-       */
       const result = await env.AI.run(
         "@cf/runwayml/stable-diffusion-v1-5-inpainting",
         {
@@ -128,12 +98,17 @@ High detail.
           image_b64: image_b64,
 
           /*
-           * Valor baixo para tentar preservar
-           * melhor a geometria original.
+           * Máscara exigida pelo modelo.
+           */
+          mask: mask,
+
+          /*
+           * Valor baixo = tenta manter
+           * mais da imagem original.
            */
           strength: 0.25,
 
-          guidance: 8,
+          guidance: 7.5,
 
           num_steps: 20
         }
@@ -141,38 +116,29 @@ High detail.
 
       if (!result) {
         throw new Error(
-          "O Workers AI não retornou nenhuma imagem."
+          "A IA não retornou uma imagem."
         );
       }
 
-      /*
-       * O modelo retorna os bytes da imagem.
-       * Enviamos diretamente para o Marcenaria 3D.
-       */
       return new Response(result, {
         status: 200,
         headers: {
-          ...corsHeaders,
+          ...cors,
           "Content-Type": "image/png",
           "Cache-Control": "no-store"
         }
       });
 
     } catch (error) {
-
       console.error("ERRO RENDER IA:", error);
 
-      const message =
-        error?.message ||
-        String(error) ||
-        "Erro desconhecido";
-
       return new Response(
-        "Erro no Worker: " + message,
+        "Erro no Worker: " +
+        (error?.message || String(error)),
         {
           status: 500,
           headers: {
-            ...corsHeaders,
+            ...cors,
             "Content-Type":
               "text/plain; charset=UTF-8",
             "Cache-Control": "no-store"
