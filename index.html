@@ -6,6 +6,15 @@
 <title>Marcenaria 3D — GLB</title>
 <style>
 html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#fff;overflow:hidden}#app{height:100%;overflow:auto;display:grid;grid-template-rows:auto minmax(120px,1fr) auto auto auto auto}header{padding:10px 12px;background:#222;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,label.btn{background:#f2f2f2;color:#111;border:0;border-radius:9px;padding:9px 11px;font-weight:700;font-size:14px}input[type=file]{display:none}#stage{position:relative;min-height:0}canvas{touch-action:none;display:block;width:100%;height:100%}#panel{background:#222;padding:9px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#panel label{font-size:11px;color:#bbb}#panel input{width:100%;box-sizing:border-box;margin-top:3px;padding:7px;border:0;border-radius:7px}#status{font-size:12px;color:#bbb;flex:1;min-width:120px}#materials{background:#222;padding:10px;border-top:1px solid #333;overflow:auto}#materials .matgrid{grid-template-columns:repeat(6,minmax(80px,1fr))}#materials h3{margin:0 0 8px;font-size:14px}.matgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mat{border:1px solid #555;background:#333;color:#fff;border-radius:8px;padding:6px;font-size:11px}.sw{height:38px;border-radius:6px;margin-bottom:4px;background-size:cover;background-position:center}#materials small{color:#aaa}#aiModal{position:absolute;inset:12px;background:#171717f5;border:1px solid #555;border-radius:14px;z-index:20;padding:14px;display:none;overflow:auto}#aiModal.open{display:block}#aiModal textarea,#aiModal input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #555;background:#292929;color:#fff;font-size:14px}#aiModal textarea{min-height:90px;resize:vertical}#aiModal .row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}#aiModal .row>*{flex:1;min-width:130px}#aiPreview{width:100%;max-height:48vh;object-fit:contain;background:#0d0d0d;border-radius:10px;margin-top:10px;display:none}#aiNote{font-size:12px;color:#bbb;line-height:1.35}.primary{background:#ffd36a!important}.danger{background:#444!important;color:#fff!important}
+
+#sceneToolbar{position:absolute;top:10px;right:10px;z-index:10;display:flex;gap:6px;max-width:calc(100% - 20px)}
+#sceneTool{display:none;background:#252525;color:white;border:1px solid #666;border-radius:8px;padding:8px;min-width:0}
+#expandScene{background:#ffd36a;box-shadow:0 2px 10px #0005}
+#app.scene-expanded{grid-template-rows:minmax(0,1fr);overflow:hidden;height:100dvh}
+#app.scene-expanded>header,#app.scene-expanded>#panel,#app.scene-expanded>#materials,#app.scene-expanded>#precisionPanel{display:none!important}
+#app.scene-expanded #sceneTool{display:block}
+#app.scene-expanded>#extrudePanel{position:absolute;bottom:12px;left:12px;right:12px;z-index:11;border:1px solid #666;border-radius:10px;box-shadow:0 3px 14px #0008}
+#app.scene-expanded>#stage{height:100%;min-height:0}
 </style>
 </head>
 <body><div id="app">
@@ -15,7 +24,7 @@ html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#f
 <input id="texture" type="file" accept="image/*"/><label class="btn" for="texture">+ Material MDF</label>
 <span id="status">Toque em um módulo para editar.</span>
 </header>
-<div id="stage"><div id="aiModal">
+<div id="stage"><div id="sceneToolbar"><select id="sceneTool" aria-label="Ferramenta de modelagem"><option value="">Ferramentas</option><option value="addBox">Adicionar módulo</option><option value="move">Mover</option><option value="rotate">Rotacionar</option><option value="vertexEdit">Vértices</option><option value="edgeEdit">Arestas</option><option value="faceEdit">Faces</option><option value="extrudeMode">Extrusão</option><option value="cutFace">Dividir face</option><option value="undoMesh">Desfazer malha</option><option value="delete">Excluir</option></select><button id="expandScene" aria-pressed="false">⛶ Ampliar cena</button></div><div id="aiModal">
 <h3 style="margin:0 0 8px">Renderização com IA</h3>
 <div id="aiNote">A cena será enviada como referência para a IA em tamanho otimizado. O objetivo é preservar o projeto e melhorar materiais, iluminação e realismo.</div>
 <div class="row"><label>URL do Worker<input id="workerUrl" type="url" value="https://render-e-ilumina-o.walisons321.workers.dev" readonly></label></div>
@@ -27,7 +36,7 @@ html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#f
 <div class="row"><button id="saveAI" disabled>Salvar / Compartilhar</button><button id="openAI" disabled>Abrir imagem</button><button id="againAI" disabled>Renderizar novamente</button></div>
 </div></div>
 <div id="extrudePanel" style="display:none;background:#292929;padding:8px"><b>Extrusão na malha</b> <label>Profundidade (mm) <input id="extrudeDepth" type="number" step="1" value="300" style="width:80px"></label> <button id="extrudeApply">Extrudar face</button> <button id="extrudeExit">Modo objeto</button></div>
-<div style="background:#292929;padding:8px;display:flex;flex-wrap:wrap;gap:6px"><label>Encaixe (mm) <input id="snapMM" type="number" min="0" value="1" style="width:55px"></label> Deslocamento em mm: <label>X <input id="dx" type="number" value="0" style="width:60px"></label><label>Y <input id="dy" type="number" value="0" style="width:60px"></label><label>Z <input id="dz" type="number" value="0" style="width:60px"></label><button id="offsetApply">Mover seleção</button></div>
+<div id="precisionPanel" style="background:#292929;padding:8px;display:flex;flex-wrap:wrap;gap:6px"><label>Encaixe (mm) <input id="snapMM" type="number" min="0" value="1" style="width:55px"></label> Deslocamento em mm: <label>X <input id="dx" type="number" value="0" style="width:60px"></label><label>Y <input id="dy" type="number" value="0" style="width:60px"></label><label>Z <input id="dz" type="number" value="0" style="width:60px"></label><button id="offsetApply">Mover seleção</button></div>
 <div id="panel">
 <label>Largura (m)<input id="sx" type="number" step="0.05" value="1"></label>
 <label>Altura (m)<input id="sy" type="number" step="0.05" value="1"></label>
@@ -49,6 +58,11 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {TransformControls} from 'three/addons/controls/TransformControls.js';
 const stage=document.querySelector('#stage'), status=document.querySelector('#status');
+const expandScene=document.querySelector('#expandScene');
+function toggleSceneSize(){const expanded=document.querySelector('#app').classList.toggle('scene-expanded');expandScene.textContent=expanded?'↙ Voltar aos painéis':'⛶ Ampliar cena';expandScene.setAttribute('aria-pressed',String(expanded));requestAnimationFrame(fit)}
+expandScene.onclick=toggleSceneSize;
+document.querySelector('#sceneTool').onchange=e=>{const id=e.target.value;if(id)document.querySelector('#'+id).click();e.target.value=''};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('#app').classList.contains('scene-expanded'))toggleSceneSize()});
 const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; stage.appendChild(renderer.domElement);
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0xdedbd3);
 const camera=new THREE.PerspectiveCamera(50,1,.01,100); camera.position.set(4,3,5);
