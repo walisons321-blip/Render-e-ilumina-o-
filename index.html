@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <title>Marcenaria 3D — GLB</title>
 <style>
-html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#fff;overflow:hidden}#app{height:100%;display:grid;grid-template-rows:auto minmax(120px,1fr) auto auto auto}header{padding:10px 12px;background:#222;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,label.btn{background:#f2f2f2;color:#111;border:0;border-radius:9px;padding:9px 11px;font-weight:700;font-size:14px}input[type=file]{display:none}#stage{position:relative;min-height:0}canvas{display:block;width:100%;height:100%}#panel{background:#222;padding:9px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#panel label{font-size:11px;color:#bbb}#panel input{width:100%;box-sizing:border-box;margin-top:3px;padding:7px;border:0;border-radius:7px}#status{font-size:12px;color:#bbb;flex:1;min-width:120px}#materials{background:#222;padding:10px;border-top:1px solid #333;overflow:auto}#materials .matgrid{grid-template-columns:repeat(6,minmax(80px,1fr))}#materials h3{margin:0 0 8px;font-size:14px}.matgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mat{border:1px solid #555;background:#333;color:#fff;border-radius:8px;padding:6px;font-size:11px}.sw{height:38px;border-radius:6px;margin-bottom:4px;background-size:cover;background-position:center}#materials small{color:#aaa}#aiModal{position:absolute;inset:12px;background:#171717f5;border:1px solid #555;border-radius:14px;z-index:20;padding:14px;display:none;overflow:auto}#aiModal.open{display:block}#aiModal textarea,#aiModal input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #555;background:#292929;color:#fff;font-size:14px}#aiModal textarea{min-height:90px;resize:vertical}#aiModal .row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}#aiModal .row>*{flex:1;min-width:130px}#aiPreview{width:100%;max-height:48vh;object-fit:contain;background:#0d0d0d;border-radius:10px;margin-top:10px;display:none}#aiNote{font-size:12px;color:#bbb;line-height:1.35}.primary{background:#ffd36a!important}.danger{background:#444!important;color:#fff!important}
+html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#fff;overflow:hidden}#app{height:100%;overflow:auto;display:grid;grid-template-rows:auto minmax(120px,1fr) auto auto auto auto}header{padding:10px 12px;background:#222;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,label.btn{background:#f2f2f2;color:#111;border:0;border-radius:9px;padding:9px 11px;font-weight:700;font-size:14px}input[type=file]{display:none}#stage{position:relative;min-height:0}canvas{touch-action:none;display:block;width:100%;height:100%}#panel{background:#222;padding:9px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#panel label{font-size:11px;color:#bbb}#panel input{width:100%;box-sizing:border-box;margin-top:3px;padding:7px;border:0;border-radius:7px}#status{font-size:12px;color:#bbb;flex:1;min-width:120px}#materials{background:#222;padding:10px;border-top:1px solid #333;overflow:auto}#materials .matgrid{grid-template-columns:repeat(6,minmax(80px,1fr))}#materials h3{margin:0 0 8px;font-size:14px}.matgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mat{border:1px solid #555;background:#333;color:#fff;border-radius:8px;padding:6px;font-size:11px}.sw{height:38px;border-radius:6px;margin-bottom:4px;background-size:cover;background-position:center}#materials small{color:#aaa}#aiModal{position:absolute;inset:12px;background:#171717f5;border:1px solid #555;border-radius:14px;z-index:20;padding:14px;display:none;overflow:auto}#aiModal.open{display:block}#aiModal textarea,#aiModal input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #555;background:#292929;color:#fff;font-size:14px}#aiModal textarea{min-height:90px;resize:vertical}#aiModal .row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}#aiModal .row>*{flex:1;min-width:130px}#aiPreview{width:100%;max-height:48vh;object-fit:contain;background:#0d0d0d;border-radius:10px;margin-top:10px;display:none}#aiNote{font-size:12px;color:#bbb;line-height:1.35}.primary{background:#ffd36a!important}.danger{background:#444!important;color:#fff!important}
 </style>
 </head>
 <body><div id="app">
 <header>
 <label class="btn">Adicionar GLB/GLTF<input id="file" type="file" accept=".glb,.gltf" /></label>
-<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="extrudeMode" style="background:#ffce79">Extrusão</button><button id="edgeEdit" style="background:#9be6d1">Editar arestas</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
+<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="extrudeMode" style="background:#ffce79">Extrusão</button><button id="vertexEdit">Vértices</button><button id="faceEdit">Faces</button><button id="cutFace">Dividir face</button><button id="undoMesh">Desfazer malha</button><button id="edgeEdit" style="background:#9be6d1">Editar arestas</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
 <input id="texture" type="file" accept="image/*"/><label class="btn" for="texture">+ Material MDF</label>
 <span id="status">Toque em um módulo para editar.</span>
 </header>
@@ -26,7 +26,8 @@ html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#f
 <img id="aiPreview" alt="Prévia do render gerado por IA">
 <div class="row"><button id="saveAI" disabled>Salvar / Compartilhar</button><button id="openAI" disabled>Abrir imagem</button><button id="againAI" disabled>Renderizar novamente</button></div>
 </div></div>
-<div id="extrudePanel" style="display:none;background:#292929;padding:10px;border-top:1px solid #555"><b>Extrusão de face</b><div style="font-size:12px;color:#bbb;margin:5px 0">Toque em uma face plana de um módulo para criar uma extensão. Ajuste a profundidade ou arraste o ponto laranja.</div><label>Profundidade (m) <input id="extrudeDepth" type="number" min="0.01" step="0.05" value="0.30" style="width:90px;padding:8px;border-radius:8px"></label> <button id="extrudeApply">Aplicar profundidade</button> <button id="extrudeExit">Concluir</button></div>
+<div id="extrudePanel" style="display:none;background:#292929;padding:8px"><b>Extrusão na malha</b> <label>Profundidade (mm) <input id="extrudeDepth" type="number" step="1" value="300" style="width:80px"></label> <button id="extrudeApply">Extrudar face</button> <button id="extrudeExit">Modo objeto</button></div>
+<div style="background:#292929;padding:8px;display:flex;flex-wrap:wrap;gap:6px"><label>Encaixe (mm) <input id="snapMM" type="number" min="0" value="1" style="width:55px"></label> Deslocamento em mm: <label>X <input id="dx" type="number" value="0" style="width:60px"></label><label>Y <input id="dy" type="number" value="0" style="width:60px"></label><label>Z <input id="dz" type="number" value="0" style="width:60px"></label><button id="offsetApply">Mover seleção</button></div>
 <div id="panel">
 <label>Largura (m)<input id="sx" type="number" step="0.05" value="1"></label>
 <label>Altura (m)<input id="sy" type="number" step="0.05" value="1"></label>
@@ -52,97 +53,63 @@ const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:tru
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0xdedbd3);
 const camera=new THREE.PerspectiveCamera(50,1,.01,100); camera.position.set(4,3,5);
 const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.target.set(0,1,0);
-const transform=new TransformControls(camera,renderer.domElement); scene.add(transform); transform.setMode('translate'); transform.addEventListener('dragging-changed',e=>controls.enabled=!e.value); transform.addEventListener('objectChange',()=>{syncFields();refreshEdges()});
+const transform=new TransformControls(camera,renderer.domElement); scene.add(transform.getHelper()); transform.setMode('translate'); transform.addEventListener('dragging-changed',e=>controls.enabled=!e.value); transform.addEventListener('objectChange',()=>{syncFields();refreshEdges()});
 const ambient=new THREE.HemisphereLight(0xffffff,0x666666,1.2); scene.add(ambient); const dl=new THREE.DirectionalLight(0xffffff,3); dl.position.set(3,6,4); dl.castShadow=true; scene.add(dl);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0xb8b2a7,roughness:.9})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 const grid=new THREE.GridHelper(20,40,0x777777,0xaaaaaa); grid.position.y=.002; scene.add(grid);
-let edgeMode=false, edgeDrag=null;
-const edgeGroup=new THREE.Group(); edgeGroup.userData.resizeHelper=true; scene.add(edgeGroup);
-const edgeHandles=[];
-for(const axis of ['x','y','z'])for(const sign of [-1,1]){
- const handle=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),new THREE.MeshBasicMaterial({color:0x00e5bf,depthTest:false}));
- handle.renderOrder=999;handle.userData.resizeHelper=true;handle.userData.axis=axis;handle.userData.sign=sign;
- edgeGroup.add(handle);edgeHandles.push(handle);
-}
-edgeGroup.visible=false;
-function boundsOfSelection(){if(!selected||selected.userData.isLight)return null;return new THREE.Box3().setFromObject(selected)}
-function refreshEdges(){
- const b=edgeMode?boundsOfSelection():null;
- edgeGroup.visible=!!b&&!b.isEmpty();if(!edgeGroup.visible)return;
- const c=b.getCenter(new THREE.Vector3());const sz=b.getSize(new THREE.Vector3());
- for(const h of edgeHandles){h.position.copy(c);h.position[h.userData.axis]+=h.userData.sign*sz[h.userData.axis]/2;}
-}
-function pointerRay(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera)}
-function startEdgeDrag(e){
- if(!edgeMode||!edgeGroup.visible)return false;
- pointerRay(e);const hits=ray.intersectObjects(edgeHandles,false);if(!hits.length)return false;
- const h=hits[0].object, axis=h.userData.axis, sign=h.userData.sign;
- const b=boundsOfSelection(), center=b.getCenter(new THREE.Vector3()), size=b.getSize(new THREE.Vector3());
- const cameraDir=new THREE.Vector3();camera.getWorldDirection(cameraDir);
- const axisVec=new THREE.Vector3();axisVec[axis]=1;
- const planeNormal=cameraDir.clone().addScaledVector(axisVec,-cameraDir.dot(axisVec)).normalize();
- if(planeNormal.lengthSq()<.001)planeNormal.copy(cameraDir);
- const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal,h.getWorldPosition(new THREE.Vector3()));
- const start=new THREE.Vector3();if(!ray.ray.intersectPlane(plane,start))return false;
- edgeDrag={axis,sign,plane,start,initialSize:size[axis],initialScale:selected.scale[axis],initialPosition:selected.position.clone(),initialCenter:center};
- controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();return true;
-}
-function dragEdge(e){
- if(!edgeDrag)return;pointerRay(e);
- const p=new THREE.Vector3();if(!ray.ray.intersectPlane(edgeDrag.plane,p))return;
- const d=(p[edgeDrag.axis]-edgeDrag.start[edgeDrag.axis])*edgeDrag.sign;
- const newSize=Math.max(.05,edgeDrag.initialSize+d);
- selected.scale[edgeDrag.axis]=edgeDrag.initialScale*(newSize/Math.max(.00001,edgeDrag.initialSize));
- // Desloca o centro metade da variação, mantendo a face oposta fixa.
- selected.position.copy(edgeDrag.initialPosition);
- selected.position[edgeDrag.axis]+=edgeDrag.sign*(newSize-edgeDrag.initialSize)/2;
- selected.updateMatrixWorld(true);refreshEdges();syncFields();
- status.textContent='Ajustando '+({x:'largura',y:'altura',z:'profundidade'}[edgeDrag.axis])+': '+newSize.toFixed(2)+' m';
-}
-function endEdgeDrag(e){if(!edgeDrag)return;edgeDrag=null;controls.enabled=true;try{renderer.domElement.releasePointerCapture(e.pointerId)}catch(_){}refreshEdges()}
-const edgeButton=document.querySelector('#edgeEdit');
-edgeButton.onclick=()=>{edgeMode=!edgeMode;edgeButton.style.background=edgeMode?'#00cfa6':'#f2f2f2';transform.detach();if(!edgeMode&&selected)transform.attach(selected);refreshEdges();status.textContent=edgeMode?'Modo arestas: arraste as bolinhas verdes nas faces do móvel.':'Modo arestas desligado.'};
-renderer.domElement.addEventListener('pointermove',dragEdge);
-renderer.domElement.addEventListener('pointerup',endEdgeDrag);
-renderer.domElement.addEventListener('pointercancel',endEdgeDrag);
 let selected=null; const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
-let extrudeMode=false, extrudeCurrent=null, extrudeDrag=null;
-const extrudeButton=document.querySelector('#extrudeMode');
-const extrudePanel=document.querySelector('#extrudePanel');
-const extrudeHandle=new THREE.Mesh(new THREE.SphereGeometry(.095,16,12),new THREE.MeshBasicMaterial({color:0xffa000,depthTest:false}));
-extrudeHandle.renderOrder=1000;extrudeHandle.userData.resizeHelper=true;extrudeHandle.visible=false;scene.add(extrudeHandle);
-function refreshExtrudeHandle(){if(!extrudeMode||!extrudeCurrent){extrudeHandle.visible=false;return}const {mesh,axis,sign}=extrudeCurrent;mesh.updateMatrixWorld(true);const local=new THREE.Vector3();local[axis]=sign*.5;extrudeHandle.position.copy(mesh.localToWorld(local));extrudeHandle.visible=true;}
-function endExtrudeMode(){extrudeMode=false;extrudeDrag=null;extrudeButton.style.background='#ffce79';extrudePanel.style.display='none';extrudeHandle.visible=false;controls.enabled=true;}
-extrudeButton.onclick=()=>{if(extrudeMode){endExtrudeMode();return}if(edgeMode)edgeButton.click();transform.detach();extrudeCurrent=null;extrudeMode=true;extrudeButton.style.background='#ff9b18';extrudePanel.style.display='block';status.textContent='Extrusão: toque na face do módulo que deseja prolongar.'};
-document.querySelector('#extrudeExit').onclick=()=>{endExtrudeMode();if(selected)transform.attach(selected)};
-function updateExtrudeDepth(value){if(!extrudeCurrent)return;const {mesh,axis,sign,base,origin}=extrudeCurrent;const depth=Math.max(.01,Number(value)||.01);mesh.scale[axis]=depth;mesh.position.copy(origin);mesh.position[axis]+=sign*depth/2;mesh.updateMatrixWorld(true);document.querySelector('#extrudeDepth').value=depth.toFixed(2);refreshExtrudeHandle();}
-document.querySelector('#extrudeApply').onclick=()=>updateExtrudeDepth(document.querySelector('#extrudeDepth').value);
-function createFaceExtrusion(hit){
- const target=hit.object;
- if(!target.isMesh||!target.geometry||!target.geometry.boundingBox&&target.geometry.computeBoundingBox===undefined)return false;
- target.geometry.computeBoundingBox();const b=target.geometry.boundingBox;if(!b||b.isEmpty())return false;
- const n=hit.face.normal.clone();const axes=['x','y','z'];let axis=axes.reduce((best,a)=>Math.abs(n[a])>Math.abs(n[best])?a:best,'x');const sign=n[axis]>=0?1:-1;
- // Extrusão de bloco: a face do objeto é prolongada como um volume novo, sem alterar a malha original.
- const size=b.getSize(new THREE.Vector3()).multiply(target.scale);const worldScale=new THREE.Vector3();target.getWorldScale(worldScale);
- const dims=b.getSize(new THREE.Vector3());const depth=Math.max(.01,Number(document.querySelector('#extrudeDepth').value)||.3);
- const shape=new THREE.BoxGeometry(axis==='x'?1:dims.x,axis==='y'?1:dims.y,axis==='z'?1:dims.z);
- const material=Array.isArray(target.material)?target.material[0].clone():target.material.clone();
- const ext=new THREE.Mesh(shape,material);ext.castShadow=true;ext.receiveShadow=true;ext.userData.editable=true;ext.userData.extruded=true;
- const center=b.getCenter(new THREE.Vector3());const origin=center.clone();origin[axis]=sign>0?b.max[axis]:b.min[axis];
- ext.position.copy(origin);ext.scale[axis]=depth;ext.position[axis]+=sign*depth/2;
- target.add(ext);extrudeCurrent={mesh:ext,axis,sign,origin};
- document.querySelector('#extrudeDepth').value=depth.toFixed(2);refreshExtrudeHandle();status.textContent='Extensão criada! Arraste o ponto laranja ou ajuste a profundidade.';return true;
+let edgeMode=false,extrudeMode=false,edgeDrag=null,extrudeCurrent=null,extrudeDrag=null;
+const edgeButton=document.querySelector('#edgeEdit'),extrudeButton=document.querySelector('#extrudeMode'),extrudePanel=document.querySelector('#extrudePanel');
+const editGroup=new THREE.Group();editGroup.userData.resizeHelper=true;scene.add(editGroup);
+let editMesh=null, component=null, editKind='face'; const undoStack=[];
+function pointerRay(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera)}
+function topology(mesh){
+ if(mesh.userData.topology)return mesh.userData.topology;
+ const g=mesh.geometry,p=g.attributes.position, ids=[],vertices=[],map=new Map();
+ for(let i=0;i<p.count;i++){const v=[p.getX(i),p.getY(i),p.getZ(i)],key=v.map(x=>Math.round(x*1e6)).join(',');if(!map.has(key)){map.set(key,vertices.length);vertices.push(v)}ids.push(map.get(key))}
+ const idx=g.index?Array.from(g.index.array):Array.from({length:p.count},(_,i)=>i),tris=[];
+ for(let i=0;i<idx.length;i+=3){const vs=idx.slice(i,i+3).map(n=>ids[n]);if(new Set(vs).size===3)tris.push(vs)}
+ const faces=[],used=new Set();
+ // Merge only adjacent coplanar triangles, preserving boundaries of imported meshes.
+ for(let i=0;i<tris.length;i++){if(used.has(i))continue;let poly=tris[i].slice();used.add(i);const a=new THREE.Vector3(...vertices[poly[0]]),normal=new THREE.Vector3(...vertices[poly[1]]).sub(a).cross(new THREE.Vector3(...vertices[poly[2]]).sub(a)).normalize();let changed=true;
+ while(changed){changed=false;for(let j=0;j<tris.length;j++){if(used.has(j))continue;const t=tris[j];const b=new THREE.Vector3(...vertices[t[0]]),n=new THREE.Vector3(...vertices[t[1]]).sub(b).cross(new THREE.Vector3(...vertices[t[2]]).sub(b)).normalize();if(n.dot(normal)<.99999||Math.abs(b.clone().sub(a).dot(normal))>1e-6)continue;
+ for(let k=0;k<poly.length;k++){const u=poly[k],v=poly[(k+1)%poly.length],q=t.indexOf(v);if(q>=0&&t[(q+1)%3]===u){const w=t[(q+2)%3];if(poly.includes(w))continue;poly.splice(k+1,0,w);used.add(j);changed=true;break}}}}
+ const offset=idx.indexOf(idx[i*3]);const mat=(g.groups.find(z=>i*3>=z.start&&i*3<z.start+z.count)||{}).materialIndex||0;faces.push({v:poly,mat})}
+ mesh.geometry=mesh.geometry.clone();mesh.userData.topology={vertices,faces};return mesh.userData.topology;
 }
-function beginExtrudeHandle(e){if(!extrudeMode||!extrudeHandle.visible)return false;pointerRay(e);if(!ray.intersectObject(extrudeHandle,false).length)return false;
- const axis=extrudeCurrent.axis,sign=extrudeCurrent.sign;const cameraDir=new THREE.Vector3();camera.getWorldDirection(cameraDir);const av=new THREE.Vector3();av[axis]=1;
- let pn=cameraDir.clone().addScaledVector(av,-cameraDir.dot(av));if(pn.lengthSq()<.0001)pn=cameraDir.clone();pn.normalize();const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(pn,extrudeHandle.position);
- const start=new THREE.Vector3();if(!ray.ray.intersectPlane(plane,start))return false;
- extrudeDrag={plane,start,axis,sign,initial:extrudeCurrent.mesh.scale[axis]};controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();return true;
-}
-function moveExtrude(e){if(!extrudeDrag)return;pointerRay(e);const p=new THREE.Vector3();if(!ray.ray.intersectPlane(extrudeDrag.plane,p))return;const {axis,sign,initial,start}=extrudeDrag;const worldScale=new THREE.Vector3();extrudeCurrent.mesh.parent.getWorldScale(worldScale);const d=(p[axis]-start[axis])*sign/Math.max(.001,Math.abs(worldScale[axis]));updateExtrudeDepth(Math.max(.01,initial+d));}
-renderer.domElement.addEventListener('pointermove',moveExtrude);
-renderer.domElement.addEventListener('pointerup',e=>{if(extrudeDrag){extrudeDrag=null;controls.enabled=true;try{renderer.domElement.releasePointerCapture(e.pointerId)}catch(_){}}});
-renderer.domElement.addEventListener('pointercancel',()=>{extrudeDrag=null;controls.enabled=true});
+function polygonNormal(points){for(let i=1;i<points.length-1;i++){const n=points[i].clone().sub(points[0]).cross(points[i+1].clone().sub(points[0]));if(n.lengthSq()>1e-16)return n.normalize()}return new THREE.Vector3(0,1,0)}
+function rebuild(mesh){const t=topology(mesh),pos=[],uv=[],owners=[];const geo=new THREE.BufferGeometry();let start=0;
+ t.faces.forEach((f,fi)=>{const points=f.v.map(i=>new THREE.Vector3(...t.vertices[i]));const normal=polygonNormal(points);const axis=['x','y','z'].reduce((a,b)=>Math.abs(normal[b])>Math.abs(normal[a])?b:a,'x');const axes=['x','y','z'].filter(a=>a!==axis);const contour=points.map(p=>new THREE.Vector2(p[axes[0]],p[axes[1]]));const triangles=THREE.ShapeUtils.triangulateShape(contour,[]);
+ for(const tri of triangles){let [a,b,c]=tri;const n=points[b].clone().sub(points[a]).cross(points[c].clone().sub(points[a]));if(n.dot(normal)<0)[b,c]=[c,b];for(const k of [a,b,c]){pos.push(...points[k].toArray());uv.push(points[k][axes[0]],points[k][axes[1]])}owners.push(fi)}const count=pos.length/3-start;geo.addGroup(start,count,f.mat);start+=count});
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.computeVertexNormals();geo.computeBoundingBox();geo.computeBoundingSphere();mesh.geometry.dispose();mesh.geometry=geo;mesh.userData.triangleFaces=owners;mesh.updateMatrixWorld(true);refreshEdges();syncFields();}
+function checkpoint(){if(!editMesh)return;undoStack.push({mesh:editMesh,t:JSON.parse(JSON.stringify(topology(editMesh)))});if(undoStack.length>40)undoStack.shift()}
+function clearHelpers(){while(editGroup.children.length){const o=editGroup.children.pop();o.parent=null;o.geometry?.dispose();o.material?.dispose()}}
+function refreshEdges(){clearHelpers();if(!edgeMode||!editMesh)return;const t=topology(editMesh);editMesh.updateMatrixWorld(true);
+ const marker=(indices,pos)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.025,10,8),new THREE.MeshBasicMaterial({color:component&&indices.join(',')===component.join(',')?0xffa000:0x00dfc0,depthTest:false}));m.position.copy(editMesh.localToWorld(pos));m.userData.resizeHelper=true;m.userData.indices=indices;m.renderOrder=999;editGroup.add(m)};
+ if(editKind==='vertex')t.vertices.forEach((v,i)=>marker([i],new THREE.Vector3(...v)));
+ if(editKind==='edge'){const seen=new Set();t.faces.forEach(f=>f.v.forEach((a,i)=>{const b=f.v[(i+1)%f.v.length],pair=[a,b].sort((a,b)=>a-b),key=pair.join(',');if(!seen.has(key)){seen.add(key);marker(pair,new THREE.Vector3(...t.vertices[a]).add(new THREE.Vector3(...t.vertices[b])).multiplyScalar(.5))}}))}
+ const lines=[];t.faces.forEach(f=>f.v.forEach((a,i)=>{lines.push(...editMesh.localToWorld(new THREE.Vector3(...t.vertices[a])).toArray(),...editMesh.localToWorld(new THREE.Vector3(...t.vertices[f.v[(i+1)%f.v.length]])).toArray())}));const wire=new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(lines,3)),new THREE.LineBasicMaterial({color:0x333333}));wire.userData.resizeHelper=true;editGroup.add(wire);
+ if(component&&editKind==='face'){const face=t.faces.find(f=>f.v.join(',')===component.join(','));if(face){const center=component.reduce((p,i)=>p.add(new THREE.Vector3(...t.vertices[i])),new THREE.Vector3()).divideScalar(component.length);marker(component,center)}}}
+function enterEdit(kind){endExtrudeMode();edgeMode=true;editKind=kind;component=null;transform.detach();editMesh=selected?.isMesh?selected:null;if(editMesh){topology(editMesh);rebuild(editMesh)}status.textContent='Edição de '+({vertex:'vértices',edge:'arestas',face:'faces'}[kind])+': toque para selecionar; arraste para mover.';refreshEdges()}
+edgeButton.onclick=()=>enterEdit('edge');document.querySelector('#vertexEdit').onclick=()=>enterEdit('vertex');document.querySelector('#faceEdit').onclick=()=>enterEdit('face');
+function leaveEdit(){edgeMode=false;component=null;clearHelpers();endExtrudeMode();if(selected)transform.attach(selected)}
+function startEdgeDrag(e){if(!edgeMode)return false;pointerRay(e);let hit=ray.intersectObjects(editGroup.children,false).find(h=>h.object.userData.indices);if(!hit)return false;component=hit.object.userData.indices.slice();checkpoint();const normal=camera.getWorldDirection(new THREE.Vector3()),plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point),start=ray.ray.intersectPlane(plane,new THREE.Vector3());if(!start)return false;edgeDrag={plane,start,original:topology(editMesh).vertices.map(v=>v.slice())};controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);refreshEdges();return true}
+function dragEdge(e){if(!edgeDrag)return;pointerRay(e);const p=ray.ray.intersectPlane(edgeDrag.plane,new THREE.Vector3());if(!p)return;const delta=p.sub(edgeDrag.start),inv=editMesh.matrixWorld.clone().invert(),local=delta.clone().applyMatrix4(inv).sub(new THREE.Vector3().applyMatrix4(inv));const snap=Number(document.querySelector('#snapMM').value)/1000;if(snap>0)local.set(...local.toArray().map(x=>Math.round(x/snap)*snap));const t=topology(editMesh);component.forEach(i=>t.vertices[i]=new THREE.Vector3(...edgeDrag.original[i]).add(local).toArray());rebuild(editMesh)}
+function endEdgeDrag(e){if(!edgeDrag)return;edgeDrag=null;controls.enabled=true;try{renderer.domElement.releasePointerCapture(e.pointerId)}catch(_){}}
+renderer.domElement.addEventListener('pointermove',dragEdge);renderer.domElement.addEventListener('pointerup',endEdgeDrag);renderer.domElement.addEventListener('pointercancel',endEdgeDrag);
+function pickComponent(hit){if(!hit.object.isMesh||hit.object.userData.lightHelper||hit.object.isSkinnedMesh||hit.object.morphTargetInfluences){status.textContent='Selecione uma malha estática para editar.';return}editMesh=hit.object;selected=editMesh;transform.detach();topology(editMesh);if(!editMesh.userData.triangleFaces){rebuild(editMesh);pointerRay(lastPointer);hit=ray.intersectObject(editMesh,false)[0];if(!hit)return}const t=topology(editMesh),f=t.faces[editMesh.userData.triangleFaces[hit.faceIndex]];if(!f)return;component=f.v.slice();if(editKind==='vertex'){const p=editMesh.worldToLocal(hit.point.clone());component=[f.v.reduce((a,b)=>p.distanceToSquared(new THREE.Vector3(...t.vertices[a]))<p.distanceToSquared(new THREE.Vector3(...t.vertices[b]))?a:b)]}else if(editKind==='edge'){const p=editMesh.worldToLocal(hit.point.clone());let best=Infinity;f.v.forEach((a,i)=>{const b=f.v[(i+1)%f.v.length],line=new THREE.Line3(new THREE.Vector3(...t.vertices[a]),new THREE.Vector3(...t.vertices[b])),d=line.closestPointToPoint(p,true,new THREE.Vector3()).distanceToSquared(p);if(d<best){best=d;component=[a,b].sort((a,b)=>a-b)}})}refreshEdges();status.textContent='Componente selecionado. Arraste o ponto destacado ou use deslocamento em mm.'}
+let lastPointer=null;
+extrudeButton.onclick=()=>{enterEdit('face');extrudeMode=true;extrudePanel.style.display='block';status.textContent='Selecione uma face e clique em Extrudar face.'};
+function endExtrudeMode(){extrudeMode=false;extrudePanel.style.display='none'}
+document.querySelector('#extrudeExit').onclick=leaveEdit;
+function extrudeSelected(){if(!editMesh||!component||editKind!=='face'){status.textContent='Selecione uma face primeiro.';return}const t=topology(editMesh),fi=t.faces.findIndex(f=>f.v.join(',')===component.join(','));if(fi<0)return;const depth=Number(document.querySelector('#extrudeDepth').value)/1000;if(!Number.isFinite(depth)||Math.abs(depth)<.000001){status.textContent='Informe uma profundidade diferente de zero.';return}checkpoint();const face=t.faces[fi],v=face.v.slice(),a=new THREE.Vector3(...t.vertices[v[0]]),n=polygonNormal(v.map(i=>new THREE.Vector3(...t.vertices[i])));const worldLength=n.clone().transformDirection(editMesh.matrixWorld);const scale=n.clone().applyMatrix3(new THREE.Matrix3().setFromMatrix4(editMesh.matrixWorld)).length();const next=v.map(i=>{t.vertices.push(new THREE.Vector3(...t.vertices[i]).addScaledVector(n,depth/Math.max(scale,1e-8)).toArray());return t.vertices.length-1});face.v=next;v.forEach((a,i)=>{const j=(i+1)%v.length;t.faces.push({v:[a,v[j],next[j],next[i]],mat:face.mat})});component=next.slice();rebuild(editMesh);status.textContent='Face extrudada na mesma malha. Profundidade: '+depth*1000+' mm.'}
+document.querySelector('#extrudeApply').onclick=extrudeSelected;
+document.querySelector('#cutFace').onclick=()=>{if(!editMesh||!component||editKind!=='face'){status.textContent='Selecione uma face para dividir.';return}const t=topology(editMesh),fi=t.faces.findIndex(f=>f.v.join(',')===component.join(',')),f=t.faces[fi];if(!f||f.v.length!==4){status.textContent='A divisão central exige uma face de quatro vértices.';return}checkpoint();const [a,b,c,d]=f.v,mid=(u,v)=>{const p=new THREE.Vector3(...t.vertices[u]).add(new THREE.Vector3(...t.vertices[v])).multiplyScalar(.5);t.vertices.push(p.toArray());return t.vertices.length-1},m=mid(a,b),n=mid(c,d);
+ // Insert cut endpoints into adjacent polygons to keep shared edges connected.
+ t.faces.forEach((other,i)=>{if(i===fi)return;for(const [u,v,w] of [[a,b,m],[c,d,n]]){for(let k=0;k<other.v.length;k++)if((other.v[k]===u&&other.v[(k+1)%other.v.length]===v)||(other.v[k]===v&&other.v[(k+1)%other.v.length]===u)){other.v.splice(k+1,0,w);break}}});t.faces.splice(fi,1,{v:[a,m,n,d],mat:f.mat},{v:[m,b,c,n],mat:f.mat});component=null;rebuild(editMesh);status.textContent='Face dividida ao meio; as bordas vizinhas continuam conectadas.'};
+document.querySelector('#offsetApply').onclick=()=>{if(!editMesh||!component)return;const delta=new THREE.Vector3(...['dx','dy','dz'].map(id=>Number(document.querySelector('#'+id).value)/1000));if(!delta.toArray().every(Number.isFinite))return;checkpoint();const inv=editMesh.matrixWorld.clone().invert(),local=delta.clone().applyMatrix4(inv).sub(new THREE.Vector3().applyMatrix4(inv));component.forEach(i=>topology(editMesh).vertices[i]=new THREE.Vector3(...topology(editMesh).vertices[i]).add(local).toArray());rebuild(editMesh)};
+document.querySelector('#undoMesh').onclick=()=>{const h=undoStack.pop();if(!h)return;editMesh=h.mesh;selected=h.mesh;editMesh.userData.topology=h.t;component=null;rebuild(editMesh);status.textContent='Última edição de malha desfeita.'};
+function refreshExtrudeHandle(){}function beginExtrudeHandle(){return false}function createFaceExtrusion(hit){pickComponent(hit);return true}
 
 const materialDefs=[
  {name:'Branco',color:'#f4f4f1'},{name:'Areia',color:'#d8c7aa'},{name:'Cinza',color:'#8d8d89'},
@@ -153,9 +120,9 @@ function applyMaterial(mat){if(!selected){status.textContent='Selecione um móve
 function addMaterialButton(name,css,onClick){const b=document.createElement('button');b.className='mat';const sw=document.createElement('div');sw.className='sw';sw.style.background=css;b.append(sw,document.createTextNode(name));b.onclick=onClick;matgrid.appendChild(b)}
 materialDefs.forEach(m=>addMaterialButton(m.name,m.color,()=>applyMaterial(new THREE.MeshStandardMaterial({color:m.color,roughness:.65}))));
 
-function fit(){const r=stage.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix()} addEventListener('resize',fit); fit();
+function fit(){const r=stage.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix()} addEventListener('resize',fit);new ResizeObserver(fit).observe(stage); fit();
 function syncFields(){if(!selected)return;document.querySelector('#sx').value=selected.scale.x.toFixed(2);document.querySelector('#sy').value=selected.scale.y.toFixed(2);document.querySelector('#sz').value=selected.scale.z.toFixed(2);document.querySelector('#px').value=selected.position.x.toFixed(2);document.querySelector('#py').value=selected.position.y.toFixed(2);document.querySelector('#pz').value=selected.position.z.toFixed(2);document.querySelector('#ry').value=THREE.MathUtils.radToDeg(selected.rotation.y).toFixed(1)}
-function select(o){selected=o; status.textContent=o?(o.userData.isLight?'Luz selecionada. Mova e ajuste intensidade/cor abaixo.':'Módulo selecionado. Use Mover/Rotacionar ou os campos abaixo.'):'Nenhum objeto selecionado.'; transform.detach(); if(o){if(!edgeMode)transform.attach(o);syncFields();syncLightFields()}refreshEdges()}
+function select(o){selected=o; status.textContent=o?(o.userData.isLight?'Luz selecionada. Mova e ajuste intensidade/cor abaixo.':'Módulo selecionado. Use Mover/Rotacionar ou os campos abaixo.'):'Nenhum objeto selecionado.'; transform.detach(); if(o){if(!edgeMode&&!extrudeMode)transform.attach(o);syncFields();syncLightFields()}refreshEdges()}
 function addBox(){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xd9c5a0,roughness:.65}));m.position.set(0,.5,0);m.castShadow=m.receiveShadow=true;m.userData.editable=true;scene.add(m);select(m)}
 document.querySelector('#addBox').onclick=addBox;
 function addLight(){
@@ -170,11 +137,11 @@ document.querySelector('#addLight').onclick=addLight;
 document.querySelector('#lightIntensity').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para ajustar a intensidade.';return}l.intensity=+e.target.value};
 document.querySelector('#ambientIntensity').oninput=e=>{ambient.intensity=+e.target.value;status.textContent='Claridade geral do ambiente ajustada.'};
 document.querySelector('#lightColor').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para mudar a cor.';return}l.color.set(e.target.value);const b=selected.children.find(o=>o.userData.lightHelper);if(b)b.material.color.set(e.target.value)};
-document.querySelector('#move').onclick=()=>{if(edgeMode)edgeButton.click();transform.setMode('translate');status.textContent='Modo mover: arraste as setas do objeto.'};
-document.querySelector('#rotate').onclick=()=>{if(edgeMode)edgeButton.click();transform.setMode('rotate');status.textContent='Modo rotacionar: arraste os arcos do objeto.'};
+document.querySelector('#move').onclick=()=>{leaveEdit();transform.setMode('translate');status.textContent='Modo mover: arraste as setas do objeto.'};
+document.querySelector('#rotate').onclick=()=>{leaveEdit();transform.setMode('rotate');status.textContent='Modo rotacionar: arraste os arcos do objeto.'};
 document.querySelector('#renderBtn').onclick=()=>{
-  const oldGrid=grid.visible, oldTransform=transform.visible; const helpers=[]; scene.traverse(o=>{if(o.userData&&(o.userData.lightHelper||o.userData.resizeHelper)){helpers.push([o,o.visible]);o.visible=false}});
-  grid.visible=false; transform.visible=false;
+  const oldGrid=grid.visible, oldTransform=transform.getHelper().visible; const helpers=[]; scene.traverse(o=>{if(o.userData&&(o.userData.lightHelper||o.userData.resizeHelper)){helpers.push([o,o.visible]);o.visible=false}});
+  grid.visible=false; transform.getHelper().visible=false;
   renderer.render(scene,camera);
   try{
     const data=renderer.domElement.toDataURL('image/png',1.0);
@@ -182,20 +149,20 @@ document.querySelector('#renderBtn').onclick=()=>{
     document.body.appendChild(a); a.click(); a.remove();
     status.textContent='Render gerado em PNG. No iPhone, confira Downloads/Arquivos.';
   }catch(err){status.textContent='Não foi possível gerar o render: '+err.message}
-  grid.visible=oldGrid; transform.visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
+  grid.visible=oldGrid; transform.getHelper().visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
 };
 
 function captureSceneDataURL(maxSide=500){
-  const oldGrid=grid.visible, oldTransform=transform.visible; const helpers=[];
+  const oldGrid=grid.visible, oldTransform=transform.getHelper().visible; const helpers=[];
   scene.traverse(o=>{if(o.userData&&(o.userData.lightHelper||o.userData.resizeHelper)){helpers.push([o,o.visible]);o.visible=false}});
-  grid.visible=false; transform.visible=false; renderer.render(scene,camera);
+  grid.visible=false; transform.getHelper().visible=false; renderer.render(scene,camera);
   const source=renderer.domElement;
   const scale=Math.min(1,maxSide/Math.max(source.width,source.height));
   const w=Math.max(1,Math.round(source.width*scale)), h=Math.max(1,Math.round(source.height*scale));
   const temp=document.createElement('canvas'); temp.width=w; temp.height=h;
   temp.getContext('2d').drawImage(source,0,0,w,h);
   const data=temp.toDataURL('image/png',1.0);
-  grid.visible=oldGrid; transform.visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
+  grid.visible=oldGrid; transform.getHelper().visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
   return data;
 }
 function dataURLToBlob(dataURL){
@@ -236,12 +203,12 @@ document.querySelector('#runAI').onclick=runAIRender; document.querySelector('#a
 document.querySelector('#saveAI').onclick=async()=>{if(!lastAIImage)return;try{await saveOrShare(lastAIImage)}catch(e){aiStatus.textContent='Não foi possível salvar: '+e.message}};
 document.querySelector('#openAI').onclick=()=>{if(!lastAIImage)return;const blob=dataURLToBlob(lastAIImage);const url=URL.createObjectURL(blob);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),60000)};
 
-renderer.domElement.addEventListener('pointerdown',e=>{if(beginExtrudeHandle(e))return;if(startEdgeDrag(e))return;const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&h.object!==grid&&!h.object.userData.resizeHelper);if(hits.length){if(extrudeMode){createFaceExtrusion(hits[0]);return}let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o.userData.editable?o:hits[0].object)} });
+renderer.domElement.addEventListener('pointerdown',e=>{lastPointer=e;if(transform.dragging||(!edgeMode&&transform.axis))return;if(startEdgeDrag(e)){e.stopImmediatePropagation();return}pointerRay(e);const roots=scene.children.filter(o=>o.userData.editable);const hits=ray.intersectObjects(roots,true).filter(h=>h.object.isMesh&&!h.object.userData.resizeHelper);if(!hits.length)return;if(edgeMode){pickComponent(hits[0]);return}let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o)} ,true);
 ['sx','sy','sz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.scale[['x','y','z'][i]]=Math.max(.05,+e.target.value||.05);refreshEdges(); if(i===1 && selected.geometry) selected.position.y=selected.scale.y/2});
 ['px','py','pz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.position[['x','y','z'][i]]=+e.target.value||0;refreshEdges()});
 document.querySelector('#ry').oninput=e=>{if(!selected)return;selected.rotation.y=THREE.MathUtils.degToRad(+e.target.value||0);refreshEdges()};
-document.querySelector('#delete').onclick=()=>{if(selected){transform.detach();scene.remove(selected);select(null)}};
+document.querySelector('#delete').onclick=()=>{if(selected){transform.detach();selected.removeFromParent();editMesh=null;leaveEdit();select(null)}};
 document.querySelector('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);new GLTFLoader().load(url,g=>{g.scene.userData.editable=true;g.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});scene.add(g.scene);select(g.scene);URL.revokeObjectURL(url)},undefined,err=>status.textContent='Erro ao abrir modelo: '+err.message)};
 document.querySelector('#texture').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!selected){status.textContent='Selecione um móvel antes de adicionar o material.';e.target.value='';return}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1);const mat=new THREE.MeshStandardMaterial({map:t,roughness:.65});applyMaterial(mat);addMaterialButton(f.name,'url('+url+')',()=>applyMaterial(mat));status.textContent='Material adicionado: '+f.name},undefined,err=>status.textContent='Erro ao carregar material: '+err.message);e.target.value=''};
-addBox(); (function loop(){requestAnimationFrame(loop);controls.update();if(edgeMode&&!edgeDrag)refreshEdges();if(extrudeMode&&extrudeCurrent&&!extrudeDrag)refreshExtrudeHandle();renderer.render(scene,camera)})();
+addBox(); (function loop(){requestAnimationFrame(loop);controls.update();if(extrudeMode&&extrudeCurrent&&!extrudeDrag)refreshExtrudeHandle();renderer.render(scene,camera)})();
 </script></body></html>
