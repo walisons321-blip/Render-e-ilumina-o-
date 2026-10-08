@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Marcenaria 3D — GLB</title>
+<style>
+html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#fff;overflow:hidden}#app{height:100%;overflow:auto;display:grid;grid-template-rows:auto minmax(120px,1fr) auto auto auto auto}header{padding:10px 12px;background:#222;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,label.btn{background:#f2f2f2;color:#111;border:0;border-radius:9px;padding:9px 11px;font-weight:700;font-size:14px}input[type=file]{display:none}#stage{position:relative;min-height:0}canvas{touch-action:none;display:block;width:100%;height:100%}#panel{background:#222;padding:9px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#panel label{font-size:11px;color:#bbb}#panel input{width:100%;box-sizing:border-box;margin-top:3px;padding:7px;border:0;border-radius:7px}#status{font-size:12px;color:#bbb;flex:1;min-width:120px}#materials{background:#222;padding:10px;border-top:1px solid #333;overflow:auto}#materials .matgrid{grid-template-columns:repeat(6,minmax(80px,1fr))}#materials h3{margin:0 0 8px;font-size:14px}.matgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mat{border:1px solid #555;background:#333;color:#fff;border-radius:8px;padding:6px;font-size:11px}.sw{height:38px;border-radius:6px;margin-bottom:4px;background-size:cover;background-position:center}#materials small{color:#aaa}#aiModal{position:absolute;inset:12px;background:#171717f5;border:1px solid #555;border-radius:14px;z-index:20;padding:14px;display:none;overflow:auto}#aiModal.open{display:block}#aiModal textarea,#aiModal input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #555;background:#292929;color:#fff;font-size:14px}#aiModal textarea{min-height:90px;resize:vertical}#aiModal .row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}#aiModal .row>*{flex:1;min-width:130px}#aiPreview{width:100%;max-height:48vh;object-fit:contain;background:#0d0d0d;border-radius:10px;margin-top:10px;display:none}#aiNote{font-size:12px;color:#bbb;line-height:1.35}.primary{background:#ffd36a!important}.danger{background:#444!important;color:#fff!important}
+
+#sceneToolbar{position:absolute;top:10px;right:10px;z-index:10;display:flex;gap:6px;max-width:calc(100% - 20px)}
+#sceneTool{display:none;background:#252525;color:white;border:1px solid #666;border-radius:8px;padding:8px;min-width:0}
+#expandScene{background:#ffd36a;box-shadow:0 2px 10px #0005}
+#app.scene-expanded{grid-template-rows:minmax(0,1fr);overflow:hidden;height:100dvh}
+#app.scene-expanded>header,#app.scene-expanded>#panel,#app.scene-expanded>#materials,#app.scene-expanded>#precisionPanel{display:none!important}
+#app.scene-expanded #sceneTool{display:block}
+#app.scene-expanded>#extrudePanel{position:absolute;bottom:12px;left:12px;right:12px;z-index:11;border:1px solid #666;border-radius:10px;box-shadow:0 3px 14px #0008}
+#app.scene-expanded>#stage{height:100%;min-height:0}
+</style>
+</head>
+<body><div id="app">
+<header>
+<label class="btn">Adicionar GLB/GLTF<input id="file" type="file" accept=".glb,.gltf" /></label>
+<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="extrudeMode" style="background:#ffce79">Extrusão</button><button id="vertexEdit">Vértices</button><button id="faceEdit">Faces</button><button id="cutFace">Dividir face</button><button id="undoMesh">Desfazer malha</button><button id="edgeEdit" style="background:#9be6d1">Editar arestas</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
+<input id="texture" type="file" accept="image/*"/><label class="btn" for="texture">+ Material MDF</label>
+<span id="status">Toque em um módulo para editar.</span>
+</header>
+<div id="stage"><div id="sceneToolbar"><select id="sceneTool" aria-label="Ferramenta de modelagem"><option value="">Ferramentas</option><option value="addBox">Adicionar módulo</option><option value="move">Mover</option><option value="rotate">Rotacionar</option><option value="vertexEdit">Vértices</option><option value="edgeEdit">Arestas</option><option value="faceEdit">Faces</option><option value="extrudeMode">Extrusão</option><option value="cutFace">Dividir face</option><option value="undoMesh">Desfazer malha</option><option value="delete">Excluir</option></select><button id="expandScene" aria-pressed="false">⛶ Ampliar cena</button></div><div id="aiModal">
+<h3 style="margin:0 0 8px">Renderização com IA</h3>
+<div id="aiNote">A cena será enviada como referência para a IA em tamanho otimizado. O objetivo é preservar o projeto e melhorar materiais, iluminação e realismo.</div>
+<div class="row"><label>URL do Worker<input id="workerUrl" type="url" value="https://render-e-ilumina-o.walisons321.workers.dev" readonly></label></div>
+<label>Instrução para o render<textarea id="aiPrompt">Transforme esta cena 3D de móveis planejados em uma fotografia arquitetônica fotorrealista. Preserve rigorosamente a câmera, perspectiva, geometria, quantidade, posição, proporções, portas, gavetas, cores e materiais dos móveis. Não invente, remova, mova ou redesenhe módulos. Melhore somente o realismo: iluminação arquitetônica equilibrada, sombras de contato, reflexos naturais, MDF realista, madeira realista, pedra e metais realistas. Evite tonalidade laranja, excesso de exposição e aparência plástica. Fotografia profissional de interiores, alta definição.</textarea></label>
+<div class="row"><label>Qualidade do render<select id="aiMode" style="width:100%;padding:10px;border-radius:8px;background:#292929;color:white;border:1px solid #555"><option value="economy">Econômico — FLUX 4B</option><option value="quality">Qualidade — FLUX 9B</option></select></label></div>
+<div class="row"><button id="runAI" class="primary">Gerar render IA</button><button id="closeAI" class="danger">Fechar</button></div>
+<div id="aiStatus" style="font-size:13px;color:#ddd">Worker de IA configurado e pronto para uso.</div>
+<img id="aiPreview" alt="Prévia do render gerado por IA">
+<div class="row"><button id="saveAI" disabled>Salvar / Compartilhar</button><button id="openAI" disabled>Abrir imagem</button><button id="againAI" disabled>Renderizar novamente</button></div>
+</div></div>
+<div id="extrudePanel" style="display:none;background:#292929;padding:8px"><b>Extrusão na malha</b> <label>Profundidade (mm) <input id="extrudeDepth" type="number" step="1" value="300" style="width:80px"></label> <button id="extrudeApply">Extrudar face</button> <button id="extrudeExit">Modo objeto</button></div>
+<div id="precisionPanel" style="background:#292929;padding:8px;display:flex;flex-wrap:wrap;gap:6px"><label>Encaixe (mm) <input id="snapMM" type="number" min="0" value="1" style="width:55px"></label> Deslocamento em mm: <label>X <input id="dx" type="number" value="0" style="width:60px"></label><label>Y <input id="dy" type="number" value="0" style="width:60px"></label><label>Z <input id="dz" type="number" value="0" style="width:60px"></label><button id="offsetApply">Mover seleção</button></div>
+<div id="panel">
+<label>Largura (m)<input id="sx" type="number" step="0.05" value="1"></label>
+<label>Altura (m)<input id="sy" type="number" step="0.05" value="1"></label>
+<label>Profundidade (m)<input id="sz" type="number" step="0.05" value="1"></label>
+<label>Posição X (m)<input id="px" type="number" step="0.05" value="0"></label>
+<label>Posição Y (m)<input id="py" type="number" step="0.05" value="0"></label>
+<label>Posição Z (m)<input id="pz" type="number" step="0.05" value="0"></label>
+<label>Rotação Y (°)<input id="ry" type="number" step="5" value="0"></label>
+<label>Intensidade da luz<input id="lightIntensity" type="range" min="0" max="20" step="0.1" value="5"></label>
+<label>Claridade geral<input id="ambientIntensity" type="range" min="0" max="5" step="0.1" value="1.2"></label>
+<label>Cor da luz<input id="lightColor" type="color" value="#fff1d6"></label>
+</div>
+<div id="materials"><h3>Materiais</h3><div class="matgrid" id="matgrid"></div><small>Selecione um móvel e toque no material. Você também pode adicionar uma imagem de MDF.</small></div>
+</div>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.170.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {TransformControls} from 'three/addons/controls/TransformControls.js';
+const stage=document.querySelector('#stage'), status=document.querySelector('#status');
+const expandScene=document.querySelector('#expandScene');
+function toggleSceneSize(){const expanded=document.querySelector('#app').classList.toggle('scene-expanded');expandScene.textContent=expanded?'↙ Voltar aos painéis':'⛶ Ampliar cena';expandScene.setAttribute('aria-pressed',String(expanded));requestAnimationFrame(fit)}
+expandScene.onclick=toggleSceneSize;
+document.querySelector('#sceneTool').onchange=e=>{const id=e.target.value;if(id)document.querySelector('#'+id).click();e.target.value=''};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('#app').classList.contains('scene-expanded'))toggleSceneSize()});
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0xdedbd3);
+const camera=new THREE.PerspectiveCamera(50,1,.01,100); camera.position.set(4,3,5);
+const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.target.set(0,1,0);
+const transform=new TransformControls(camera,renderer.domElement); scene.add(transform.getHelper()); transform.setMode('translate'); transform.addEventListener('dragging-changed',e=>controls.enabled=!e.value); transform.addEventListener('objectChange',()=>{syncFields();refreshEdges()});
+const ambient=new THREE.HemisphereLight(0xffffff,0x666666,1.2); scene.add(ambient); const dl=new THREE.DirectionalLight(0xffffff,3); dl.position.set(3,6,4); dl.castShadow=true; scene.add(dl);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0xb8b2a7,roughness:.9})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+const grid=new THREE.GridHelper(20,40,0x777777,0xaaaaaa); grid.position.y=.002; scene.add(grid);
+let selected=null; const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
+let edgeMode=false,extrudeMode=false,edgeDrag=null,extrudeCurrent=null,extrudeDrag=null;
+const edgeButton=document.querySelector('#edgeEdit'),extrudeButton=document.querySelector('#extrudeMode'),extrudePanel=document.querySelector('#extrudePanel');
+const editGroup=new THREE.Group();editGroup.userData.resizeHelper=true;scene.add(editGroup);
+let editMesh=null, component=null, editKind='face'; const undoStack=[];
+function pointerRay(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera)}
+function topology(mesh){
+ if(mesh.userData.topology)return mesh.userData.topology;
+ const g=mesh.geometry,p=g.attributes.position, ids=[],vertices=[],map=new Map();
+ for(let i=0;i<p.count;i++){const v=[p.getX(i),p.getY(i),p.getZ(i)],key=v.map(x=>Math.round(x*1e6)).join(',');if(!map.has(key)){map.set(key,vertices.length);vertices.push(v)}ids.push(map.get(key))}
+ const idx=g.index?Array.from(g.index.array):Array.from({length:p.count},(_,i)=>i),tris=[];
+ for(let i=0;i<idx.length;i+=3){const vs=idx.slice(i,i+3).map(n=>ids[n]);if(new Set(vs).size===3)tris.push(vs)}
+ const faces=[],used=new Set();
+ // Merge only adjacent coplanar triangles, preserving boundaries of imported meshes.
+ for(let i=0;i<tris.length;i++){if(used.has(i))continue;let poly=tris[i].slice();used.add(i);const a=new THREE.Vector3(...vertices[poly[0]]),normal=new THREE.Vector3(...vertices[poly[1]]).sub(a).cross(new THREE.Vector3(...vertices[poly[2]]).sub(a)).normalize();let changed=true;
+ while(changed){changed=false;for(let j=0;j<tris.length;j++){if(used.has(j))continue;const t=tris[j];const b=new THREE.Vector3(...vertices[t[0]]),n=new THREE.Vector3(...vertices[t[1]]).sub(b).cross(new THREE.Vector3(...vertices[t[2]]).sub(b)).normalize();if(n.dot(normal)<.99999||Math.abs(b.clone().sub(a).dot(normal))>1e-6)continue;
+ for(let k=0;k<poly.length;k++){const u=poly[k],v=poly[(k+1)%poly.length],q=t.indexOf(v);if(q>=0&&t[(q+1)%3]===u){const w=t[(q+2)%3];if(poly.includes(w))continue;poly.splice(k+1,0,w);used.add(j);changed=true;break}}}}
+ const offset=idx.indexOf(idx[i*3]);const mat=(g.groups.find(z=>i*3>=z.start&&i*3<z.start+z.count)||{}).materialIndex||0;faces.push({v:poly,mat})}
+ mesh.geometry=mesh.geometry.clone();mesh.userData.topology={vertices,faces};return mesh.userData.topology;
+}
+function polygonNormal(points){for(let i=1;i<points.length-1;i++){const n=points[i].clone().sub(points[0]).cross(points[i+1].clone().sub(points[0]));if(n.lengthSq()>1e-16)return n.normalize()}return new THREE.Vector3(0,1,0)}
+function rebuild(mesh){const t=topology(mesh),pos=[],uv=[],owners=[];const geo=new THREE.BufferGeometry();let start=0;
+ t.faces.forEach((f,fi)=>{const points=f.v.map(i=>new THREE.Vector3(...t.vertices[i]));const normal=polygonNormal(points);const axis=['x','y','z'].reduce((a,b)=>Math.abs(normal[b])>Math.abs(normal[a])?b:a,'x');const axes=['x','y','z'].filter(a=>a!==axis);const contour=points.map(p=>new THREE.Vector2(p[axes[0]],p[axes[1]]));const triangles=THREE.ShapeUtils.triangulateShape(contour,[]);
+ for(const tri of triangles){let [a,b,c]=tri;const n=points[b].clone().sub(points[a]).cross(points[c].clone().sub(points[a]));if(n.dot(normal)<0)[b,c]=[c,b];for(const k of [a,b,c]){pos.push(...points[k].toArray());uv.push(points[k][axes[0]],points[k][axes[1]])}owners.push(fi)}const count=pos.length/3-start;geo.addGroup(start,count,f.mat);start+=count});
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.computeVertexNormals();geo.computeBoundingBox();geo.computeBoundingSphere();mesh.geometry.dispose();mesh.geometry=geo;mesh.userData.triangleFaces=owners;mesh.updateMatrixWorld(true);refreshEdges();syncFields();}
+function checkpoint(){if(!editMesh)return;undoStack.push({mesh:editMesh,t:JSON.parse(JSON.stringify(topology(editMesh)))});if(undoStack.length>40)undoStack.shift()}
+function clearHelpers(){while(editGroup.children.length){const o=editGroup.children.pop();o.parent=null;o.geometry?.dispose();o.material?.dispose()}}
+function refreshEdges(){clearHelpers();if(!edgeMode||!editMesh)return;const t=topology(editMesh);editMesh.updateMatrixWorld(true);
+ const marker=(indices,pos)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.025,10,8),new THREE.MeshBasicMaterial({color:component&&indices.join(',')===component.join(',')?0xffa000:0x00dfc0,depthTest:false}));m.position.copy(editMesh.localToWorld(pos));m.userData.resizeHelper=true;m.userData.indices=indices;m.renderOrder=999;editGroup.add(m)};
+ if(editKind==='vertex')t.vertices.forEach((v,i)=>marker([i],new THREE.Vector3(...v)));
+ if(editKind==='edge'){const seen=new Set();t.faces.forEach(f=>f.v.forEach((a,i)=>{const b=f.v[(i+1)%f.v.length],pair=[a,b].sort((a,b)=>a-b),key=pair.join(',');if(!seen.has(key)){seen.add(key);marker(pair,new THREE.Vector3(...t.vertices[a]).add(new THREE.Vector3(...t.vertices[b])).multiplyScalar(.5))}}))}
+ const lines=[];t.faces.forEach(f=>f.v.forEach((a,i)=>{lines.push(...editMesh.localToWorld(new THREE.Vector3(...t.vertices[a])).toArray(),...editMesh.localToWorld(new THREE.Vector3(...t.vertices[f.v[(i+1)%f.v.length]])).toArray())}));const wire=new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(lines,3)),new THREE.LineBasicMaterial({color:0x333333}));wire.userData.resizeHelper=true;editGroup.add(wire);
+ if(component&&editKind==='face'){const face=t.faces.find(f=>f.v.join(',')===component.join(','));if(face){const center=component.reduce((p,i)=>p.add(new THREE.Vector3(...t.vertices[i])),new THREE.Vector3()).divideScalar(component.length);marker(component,center)}}}
+function enterEdit(kind){endExtrudeMode();edgeMode=true;editKind=kind;component=null;transform.detach();editMesh=selected?.isMesh?selected:null;if(editMesh){topology(editMesh);rebuild(editMesh)}status.textContent='Edição de '+({vertex:'vértices',edge:'arestas',face:'faces'}[kind])+': toque para selecionar; arraste para mover.';refreshEdges()}
+edgeButton.onclick=()=>enterEdit('edge');document.querySelector('#vertexEdit').onclick=()=>enterEdit('vertex');document.querySelector('#faceEdit').onclick=()=>enterEdit('face');
+function leaveEdit(){edgeMode=false;component=null;clearHelpers();endExtrudeMode();if(selected)transform.attach(selected)}
+function startEdgeDrag(e){if(!edgeMode)return false;pointerRay(e);let hit=ray.intersectObjects(editGroup.children,false).find(h=>h.object.userData.indices);if(!hit)return false;component=hit.object.userData.indices.slice();checkpoint();const normal=camera.getWorldDirection(new THREE.Vector3()),plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point),start=ray.ray.intersectPlane(plane,new THREE.Vector3());if(!start)return false;edgeDrag={plane,start,original:topology(editMesh).vertices.map(v=>v.slice())};controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);refreshEdges();return true}
+function dragEdge(e){if(!edgeDrag)return;pointerRay(e);const p=ray.ray.intersectPlane(edgeDrag.plane,new THREE.Vector3());if(!p)return;const delta=p.sub(edgeDrag.start),inv=editMesh.matrixWorld.clone().invert(),local=delta.clone().applyMatrix4(inv).sub(new THREE.Vector3().applyMatrix4(inv));const snap=Number(document.querySelector('#snapMM').value)/1000;if(snap>0)local.set(...local.toArray().map(x=>Math.round(x/snap)*snap));const t=topology(editMesh);component.forEach(i=>t.vertices[i]=new THREE.Vector3(...edgeDrag.original[i]).add(local).toArray());rebuild(editMesh)}
+function endEdgeDrag(e){if(!edgeDrag)return;edgeDrag=null;controls.enabled=true;try{renderer.domElement.releasePointerCapture(e.pointerId)}catch(_){}}
+renderer.domElement.addEventListener('pointermove',dragEdge);renderer.domElement.addEventListener('pointerup',endEdgeDrag);renderer.domElement.addEventListener('pointercancel',endEdgeDrag);
+function pickComponent(hit){if(!hit.object.isMesh||hit.object.userData.lightHelper||hit.object.isSkinnedMesh||hit.object.morphTargetInfluences){status.textContent='Selecione uma malha estática para editar.';return}editMesh=hit.object;selected=editMesh;transform.detach();topology(editMesh);if(!editMesh.userData.triangleFaces){rebuild(editMesh);pointerRay(lastPointer);hit=ray.intersectObject(editMesh,false)[0];if(!hit)return}const t=topology(editMesh),f=t.faces[editMesh.userData.triangleFaces[hit.faceIndex]];if(!f)return;component=f.v.slice();if(editKind==='vertex'){const p=editMesh.worldToLocal(hit.point.clone());component=[f.v.reduce((a,b)=>p.distanceToSquared(new THREE.Vector3(...t.vertices[a]))<p.distanceToSquared(new THREE.Vector3(...t.vertices[b]))?a:b)]}else if(editKind==='edge'){const p=editMesh.worldToLocal(hit.point.clone());let best=Infinity;f.v.forEach((a,i)=>{const b=f.v[(i+1)%f.v.length],line=new THREE.Line3(new THREE.Vector3(...t.vertices[a]),new THREE.Vector3(...t.vertices[b])),d=line.closestPointToPoint(p,true,new THREE.Vector3()).distanceToSquared(p);if(d<best){best=d;component=[a,b].sort((a,b)=>a-b)}})}refreshEdges();status.textContent='Componente selecionado. Arraste o ponto destacado ou use deslocamento em mm.'}
+let lastPointer=null;
+extrudeButton.onclick=()=>{enterEdit('face');extrudeMode=true;extrudePanel.style.display='block';status.textContent='Selecione uma face e clique em Extrudar face.'};
+function endExtrudeMode(){extrudeMode=false;extrudePanel.style.display='none'}
+document.querySelector('#extrudeExit').onclick=leaveEdit;
+function extrudeSelected(){if(!editMesh||!component||editKind!=='face'){status.textContent='Selecione uma face primeiro.';return}const t=topology(editMesh),fi=t.faces.findIndex(f=>f.v.join(',')===component.join(','));if(fi<0)return;const depth=Number(document.querySelector('#extrudeDepth').value)/1000;if(!Number.isFinite(depth)||Math.abs(depth)<.000001){status.textContent='Informe uma profundidade diferente de zero.';return}checkpoint();const face=t.faces[fi],v=face.v.slice(),a=new THREE.Vector3(...t.vertices[v[0]]),n=polygonNormal(v.map(i=>new THREE.Vector3(...t.vertices[i])));const worldLength=n.clone().transformDirection(editMesh.matrixWorld);const scale=n.clone().applyMatrix3(new THREE.Matrix3().setFromMatrix4(editMesh.matrixWorld)).length();const next=v.map(i=>{t.vertices.push(new THREE.Vector3(...t.vertices[i]).addScaledVector(n,depth/Math.max(scale,1e-8)).toArray());return t.vertices.length-1});face.v=next;v.forEach((a,i)=>{const j=(i+1)%v.length;t.faces.push({v:[a,v[j],next[j],next[i]],mat:face.mat})});component=next.slice();rebuild(editMesh);status.textContent='Face extrudada na mesma malha. Profundidade: '+depth*1000+' mm.'}
+document.querySelector('#extrudeApply').onclick=extrudeSelected;
+document.querySelector('#cutFace').onclick=()=>{if(!editMesh||!component||editKind!=='face'){status.textContent='Selecione uma face para dividir.';return}const t=topology(editMesh),fi=t.faces.findIndex(f=>f.v.join(',')===component.join(',')),f=t.faces[fi];if(!f||f.v.length!==4){status.textContent='A divisão central exige uma face de quatro vértices.';return}checkpoint();const [a,b,c,d]=f.v,mid=(u,v)=>{const p=new THREE.Vector3(...t.vertices[u]).add(new THREE.Vector3(...t.vertices[v])).multiplyScalar(.5);t.vertices.push(p.toArray());return t.vertices.length-1},m=mid(a,b),n=mid(c,d);
+ // Insert cut endpoints into adjacent polygons to keep shared edges connected.
+ t.faces.forEach((other,i)=>{if(i===fi)return;for(const [u,v,w] of [[a,b,m],[c,d,n]]){for(let k=0;k<other.v.length;k++)if((other.v[k]===u&&other.v[(k+1)%other.v.length]===v)||(other.v[k]===v&&other.v[(k+1)%other.v.length]===u)){other.v.splice(k+1,0,w);break}}});t.faces.splice(fi,1,{v:[a,m,n,d],mat:f.mat},{v:[m,b,c,n],mat:f.mat});component=null;rebuild(editMesh);status.textContent='Face dividida ao meio; as bordas vizinhas continuam conectadas.'};
+document.querySelector('#offsetApply').onclick=()=>{if(!editMesh||!component)return;const delta=new THREE.Vector3(...['dx','dy','dz'].map(id=>Number(document.querySelector('#'+id).value)/1000));if(!delta.toArray().every(Number.isFinite))return;checkpoint();const inv=editMesh.matrixWorld.clone().invert(),local=delta.clone().applyMatrix4(inv).sub(new THREE.Vector3().applyMatrix4(inv));component.forEach(i=>topology(editMesh).vertices[i]=new THREE.Vector3(...topology(editMesh).vertices[i]).add(local).toArray());rebuild(editMesh)};
+document.querySelector('#undoMesh').onclick=()=>{const h=undoStack.pop();if(!h)return;editMesh=h.mesh;selected=h.mesh;editMesh.userData.topology=h.t;component=null;rebuild(editMesh);status.textContent='Última edição de malha desfeita.'};
+function refreshExtrudeHandle(){}function beginExtrudeHandle(){return false}function createFaceExtrusion(hit){pickComponent(hit);return true}
+
+const materialDefs=[
+ {name:'Branco',color:'#f4f4f1'},{name:'Areia',color:'#d8c7aa'},{name:'Cinza',color:'#8d8d89'},
+ {name:'Preto',color:'#252525'},{name:'Carvalho',color:'#b88a55'},{name:'Freijó',color:'#a87543'}
+];
+const matgrid=document.querySelector('#matgrid');
+function applyMaterial(mat){if(!selected){status.textContent='Selecione um móvel primeiro.';return}selected.traverse(o=>{if(o.isMesh){o.material=mat.clone();o.material.needsUpdate=true}});status.textContent='Material aplicado ao módulo selecionado.'}
+function addMaterialButton(name,css,onClick){const b=document.createElement('button');b.className='mat';const sw=document.createElement('div');sw.className='sw';sw.style.background=css;b.append(sw,document.createTextNode(name));b.onclick=onClick;matgrid.appendChild(b)}
+materialDefs.forEach(m=>addMaterialButton(m.name,m.color,()=>applyMaterial(new THREE.MeshStandardMaterial({color:m.color,roughness:.65}))));
+
+function fit(){const r=stage.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix()} addEventListener('resize',fit);new ResizeObserver(fit).observe(stage); fit();
+function syncFields(){if(!selected)return;document.querySelector('#sx').value=selected.scale.x.toFixed(2);document.querySelector('#sy').value=selected.scale.y.toFixed(2);document.querySelector('#sz').value=selected.scale.z.toFixed(2);document.querySelector('#px').value=selected.position.x.toFixed(2);document.querySelector('#py').value=selected.position.y.toFixed(2);document.querySelector('#pz').value=selected.position.z.toFixed(2);document.querySelector('#ry').value=THREE.MathUtils.radToDeg(selected.rotation.y).toFixed(1)}
+function select(o){selected=o; status.textContent=o?(o.userData.isLight?'Luz selecionada. Mova e ajuste intensidade/cor abaixo.':'Módulo selecionado. Use Mover/Rotacionar ou os campos abaixo.'):'Nenhum objeto selecionado.'; transform.detach(); if(o){if(!edgeMode&&!extrudeMode)transform.attach(o);syncFields();syncLightFields()}refreshEdges()}
+function addBox(){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xd9c5a0,roughness:.65}));m.position.set(0,.5,0);m.castShadow=m.receiveShadow=true;m.userData.editable=true;scene.add(m);select(m)}
+document.querySelector('#addBox').onclick=addBox;
+function addLight(){
+ const group=new THREE.Group(); group.userData.editable=true; group.userData.isLight=true;
+ const light=new THREE.PointLight(0xfff1d6,5,12,2); light.position.set(0,0,0); light.castShadow=true; group.add(light);
+ const bulb=new THREE.Mesh(new THREE.SphereGeometry(.08,16,12),new THREE.MeshBasicMaterial({color:0xfff1d6})); bulb.userData.lightHelper=true; group.add(bulb);
+ group.position.set(0,2.4,1); scene.add(group); select(group); transform.setMode('translate'); status.textContent='Luz adicionada. Mova-a e ajuste intensidade/cor abaixo.'; syncLightFields();
+}
+function selectedLight(){if(!selected||!selected.userData.isLight)return null;return selected.children.find(o=>o.isPointLight)}
+function syncLightFields(){const l=selectedLight(); if(!l)return; document.querySelector('#lightIntensity').value=l.intensity; document.querySelector('#lightColor').value='#'+l.color.getHexString()}
+document.querySelector('#addLight').onclick=addLight;
+document.querySelector('#lightIntensity').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para ajustar a intensidade.';return}l.intensity=+e.target.value};
+document.querySelector('#ambientIntensity').oninput=e=>{ambient.intensity=+e.target.value;status.textContent='Claridade geral do ambiente ajustada.'};
+document.querySelector('#lightColor').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para mudar a cor.';return}l.color.set(e.target.value);const b=selected.children.find(o=>o.userData.lightHelper);if(b)b.material.color.set(e.target.value)};
+document.querySelector('#move').onclick=()=>{leaveEdit();transform.setMode('translate');status.textContent='Modo mover: arraste as setas do objeto.'};
+document.querySelector('#rotate').onclick=()=>{leaveEdit();transform.setMode('rotate');status.textContent='Modo rotacionar: arraste os arcos do objeto.'};
+document.querySelector('#renderBtn').onclick=()=>{
+  const oldGrid=grid.visible, oldTransform=transform.getHelper().visible; const helpers=[]; scene.traverse(o=>{if(o.userData&&(o.userData.lightHelper||o.userData.resizeHelper)){helpers.push([o,o.visible]);o.visible=false}});
+  grid.visible=false; transform.getHelper().visible=false;
+  renderer.render(scene,camera);
+  try{
+    const data=renderer.domElement.toDataURL('image/png',1.0);
+    const a=document.createElement('a'); a.href=data; a.download='render-marcenaria-3d.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    status.textContent='Render gerado em PNG. No iPhone, confira Downloads/Arquivos.';
+  }catch(err){status.textContent='Não foi possível gerar o render: '+err.message}
+  grid.visible=oldGrid; transform.getHelper().visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
+};
+
+function captureSceneDataURL(maxSide=500){
+  const oldGrid=grid.visible, oldTransform=transform.getHelper().visible; const helpers=[];
+  scene.traverse(o=>{if(o.userData&&(o.userData.lightHelper||o.userData.resizeHelper)){helpers.push([o,o.visible]);o.visible=false}});
+  grid.visible=false; transform.getHelper().visible=false; renderer.render(scene,camera);
+  const source=renderer.domElement;
+  const scale=Math.min(1,maxSide/Math.max(source.width,source.height));
+  const w=Math.max(1,Math.round(source.width*scale)), h=Math.max(1,Math.round(source.height*scale));
+  const temp=document.createElement('canvas'); temp.width=w; temp.height=h;
+  temp.getContext('2d').drawImage(source,0,0,w,h);
+  const data=temp.toDataURL('image/png',1.0);
+  grid.visible=oldGrid; transform.getHelper().visible=oldTransform; helpers.forEach(([o,v])=>o.visible=v); renderer.render(scene,camera);
+  return data;
+}
+function dataURLToBlob(dataURL){
+  const [head,b64]=dataURL.split(','); const mime=(head.match(/data:(.*?);/)||[])[1]||'image/png';
+  const bin=atob(b64), bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new Blob([bytes],{type:mime});
+}
+async function saveOrShare(dataURL){
+  const blob=dataURLToBlob(dataURL); const file=new File([blob],'render-ia-marcenaria.png',{type:blob.type});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:'Render Marcenaria 3D'});return}catch(e){if(e.name==='AbortError')return}
+  }
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='render-ia-marcenaria.png';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+const aiModal=document.querySelector('#aiModal'), aiStatus=document.querySelector('#aiStatus'), aiPreview=document.querySelector('#aiPreview');
+let lastAIImage='';
+document.querySelector('#aiRenderBtn').onclick=()=>{aiModal.classList.add('open')};
+document.querySelector('#closeAI').onclick=()=>aiModal.classList.remove('open');
+async function runAIRender(){
+ const workerUrl=document.querySelector('#workerUrl').value.trim(); const prompt=document.querySelector('#aiPrompt').value.trim();
+ if(!workerUrl){aiStatus.textContent='Cole a URL do Cloudflare Worker para continuar.';return}
+ document.querySelector('#runAI').disabled=true; document.querySelector('#againAI').disabled=true; aiStatus.textContent='Capturando a cena e enviando para a IA…';
+ try{
+   const image=captureSceneDataURL(500);
+   const res=await fetch(workerUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,prompt,mode:document.querySelector('#aiMode').value})});
+   if(!res.ok) throw new Error((await res.text())||('HTTP '+res.status));
+   const ct=res.headers.get('content-type')||''; let dataUrl='';
+   if(ct.startsWith('image/')){const blob=await res.blob();dataUrl=await new Promise((ok,fail)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=fail;r.readAsDataURL(blob)})}
+   else {const j=await res.json(); dataUrl=j.image||j.dataURI||j.result||''; if(dataUrl&&!dataUrl.startsWith('data:'))dataUrl='data:image/png;base64,'+dataUrl}
+   if(!dataUrl)throw new Error('O Worker não retornou uma imagem.');
+   lastAIImage=dataUrl; aiPreview.src=dataUrl; aiPreview.style.display='block'; document.querySelector('#saveAI').disabled=false; document.querySelector('#openAI').disabled=false; document.querySelector('#againAI').disabled=false; aiStatus.textContent='Render concluído. No iPhone, use Salvar / Compartilhar ou Abrir imagem.';
+ }catch(err){aiStatus.textContent='Falha no render IA: '+err.message}
+ finally{document.querySelector('#runAI').disabled=false}
+}
+document.querySelector('#runAI').onclick=runAIRender; document.querySelector('#againAI').onclick=runAIRender;
+document.querySelector('#saveAI').onclick=async()=>{if(!lastAIImage)return;try{await saveOrShare(lastAIImage)}catch(e){aiStatus.textContent='Não foi possível salvar: '+e.message}};
+document.querySelector('#openAI').onclick=()=>{if(!lastAIImage)return;const blob=dataURLToBlob(lastAIImage);const url=URL.createObjectURL(blob);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),60000)};
+
+renderer.domElement.addEventListener('pointerdown',e=>{lastPointer=e;if(transform.dragging||(!edgeMode&&transform.axis))return;if(startEdgeDrag(e)){e.stopImmediatePropagation();return}pointerRay(e);const roots=scene.children.filter(o=>o.userData.editable);const hits=ray.intersectObjects(roots,true).filter(h=>h.object.isMesh&&!h.object.userData.resizeHelper);if(!hits.length)return;if(edgeMode){pickComponent(hits[0]);return}let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o)} ,true);
+['sx','sy','sz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.scale[['x','y','z'][i]]=Math.max(.05,+e.target.value||.05);refreshEdges(); if(i===1 && selected.geometry) selected.position.y=selected.scale.y/2});
+['px','py','pz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.position[['x','y','z'][i]]=+e.target.value||0;refreshEdges()});
+document.querySelector('#ry').oninput=e=>{if(!selected)return;selected.rotation.y=THREE.MathUtils.degToRad(+e.target.value||0);refreshEdges()};
+document.querySelector('#delete').onclick=()=>{if(selected){transform.detach();selected.removeFromParent();editMesh=null;leaveEdit();select(null)}};
+document.querySelector('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);new GLTFLoader().load(url,g=>{g.scene.userData.editable=true;g.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});scene.add(g.scene);select(g.scene);URL.revokeObjectURL(url)},undefined,err=>status.textContent='Erro ao abrir modelo: '+err.message)};
+document.querySelector('#texture').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!selected){status.textContent='Selecione um móvel antes de adicionar o material.';e.target.value='';return}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1);const mat=new THREE.MeshStandardMaterial({map:t,roughness:.65});applyMaterial(mat);addMaterialButton(f.name,'url('+url+')',()=>applyMaterial(mat));status.textContent='Material adicionado: '+f.name},undefined,err=>status.textContent='Erro ao carregar material: '+err.message);e.target.value=''};
+addBox(); (function loop(){requestAnimationFrame(loop);controls.update();if(extrudeMode&&extrudeCurrent&&!extrudeDrag)refreshExtrudeHandle();renderer.render(scene,camera)})();
+</script></body></html>
