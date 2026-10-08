@@ -35,12 +35,12 @@ export default {
         ? "@cf/black-forest-labs/flux-2-klein-9b"
         : "@cf/black-forest-labs/flux-2-klein-4b";
 
-      const b64 = body.image.replace(
+      const base64 = body.image.replace(
         /^data:image\/[\w.+-]+;base64,/,
         ""
       );
 
-      const binary = atob(b64);
+      const binary = atob(base64);
       const bytes = new Uint8Array(binary.length);
 
       for (let i = 0; i < binary.length; i++) {
@@ -55,9 +55,24 @@ export default {
         "projeto.png"
       );
 
+      const preservation =
+        "Create a photorealistic architectural render of input image 0. " +
+        "Preserve object identities, layout, camera, dimensions, colors and reference materials. " +
+        "Appliances are real electrical appliances with metal/enamel bodies and glass/control panels, NEVER wood or MDF. " +
+        "Keep black appliances black. " +
+        "Sinks are hollow metal or ceramic bowls; faucets are metal. " +
+        "Apply wood/MDF only to furniture with that finish in the reference. " +
+        "Do not redesign or add objects.";
+
+      const requested = typeof body.prompt === "string"
+        ? body.prompt.trim().slice(0, 24000)
+        : "";
+
+      // Encaminha as instruções e a identificação
+      // dos objetos enviadas pelo aplicativo.
       form.append(
         "prompt",
-        "Create a realistic architectural visualization based on input image 0. Keep the same cabinetry, arrangement, geometry, perspective and composition. Use realistic neutral lighting, MDF, wood and subtle shadows. Do not redesign the scene."
+        preservation + (requested ? "\n\n" + requested : "")
       );
 
       form.append("width", "1024");
@@ -76,6 +91,12 @@ export default {
         throw new Error("A IA não retornou uma imagem.");
       }
 
+      const imageHeaders = {
+        ...cors,
+        "Content-Type": "image/png",
+        "Cache-Control": "no-store"
+      };
+
       if (
         result instanceof ReadableStream ||
         result instanceof ArrayBuffer ||
@@ -83,28 +104,20 @@ export default {
         result instanceof Blob
       ) {
         return new Response(result, {
-          headers: {
-            ...cors,
-            "Content-Type": "image/png",
-            "Cache-Control": "no-store"
-          }
+          headers: imageHeaders
         });
       }
 
-      const encoded =
-        typeof result === "string"
-          ? result
-          : result.image;
+      const encoded = typeof result === "string"
+        ? result
+        : result.image;
 
       if (!encoded || typeof encoded !== "string") {
         throw new Error("Formato de resposta inesperado da IA.");
       }
 
       const data = atob(
-        encoded.replace(
-          /^data:image\/[\w.+-]+;base64,/,
-          ""
-        )
+        encoded.replace(/^data:image\/[\w.+-]+;base64,/, "")
       );
 
       const output = new Uint8Array(data.length);
@@ -114,13 +127,8 @@ export default {
       }
 
       return new Response(output, {
-        headers: {
-          ...cors,
-          "Content-Type": "image/png",
-          "Cache-Control": "no-store"
-        }
+        headers: imageHeaders
       });
-
     } catch (error) {
       console.error("Erro no render IA:", error);
 
@@ -130,16 +138,13 @@ export default {
         ? "Cota gratuita diária da Cloudflare esgotada. Aguarde a renovação."
         : message;
 
-      return new Response(
-        "Erro no Worker: " + friendly,
-        {
-          status: 500,
-          headers: {
-            ...cors,
-            "Content-Type": "text/plain; charset=utf-8"
-          }
+      return new Response("Erro no Worker: " + friendly, {
+        status: 500,
+        headers: {
+          ...cors,
+          "Content-Type": "text/plain; charset=utf-8"
         }
-      );
+      });
     }
   }
 };
