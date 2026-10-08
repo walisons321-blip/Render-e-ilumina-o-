@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <title>Marcenaria 3D — GLB</title>
 <style>
-html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#fff;overflow:hidden}#app{height:100%;display:grid;grid-template-rows:auto 1fr auto}header{padding:10px 12px;background:#222;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,label.btn{background:#f2f2f2;color:#111;border:0;border-radius:9px;padding:9px 11px;font-weight:700;font-size:14px}input[type=file]{display:none}#stage{position:relative;min-height:0}canvas{display:block;width:100%;height:100%}#panel{background:#222;padding:9px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#panel label{font-size:11px;color:#bbb}#panel input{width:100%;box-sizing:border-box;margin-top:3px;padding:7px;border:0;border-radius:7px}#status{font-size:12px;color:#bbb;flex:1;min-width:120px}#materials{background:#222;padding:10px;border-top:1px solid #333;overflow:auto}#materials .matgrid{grid-template-columns:repeat(6,minmax(80px,1fr))}#materials h3{margin:0 0 8px;font-size:14px}.matgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mat{border:1px solid #555;background:#333;color:#fff;border-radius:8px;padding:6px;font-size:11px}.sw{height:38px;border-radius:6px;margin-bottom:4px;background-size:cover;background-position:center}#materials small{color:#aaa}#aiModal{position:absolute;inset:12px;background:#171717f5;border:1px solid #555;border-radius:14px;z-index:20;padding:14px;display:none;overflow:auto}#aiModal.open{display:block}#aiModal textarea,#aiModal input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #555;background:#292929;color:#fff;font-size:14px}#aiModal textarea{min-height:90px;resize:vertical}#aiModal .row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}#aiModal .row>*{flex:1;min-width:130px}#aiPreview{width:100%;max-height:48vh;object-fit:contain;background:#0d0d0d;border-radius:10px;margin-top:10px;display:none}#aiNote{font-size:12px;color:#bbb;line-height:1.35}.primary{background:#ffd36a!important}.danger{background:#444!important;color:#fff!important}
+html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#fff;overflow:hidden}#app{height:100%;display:grid;grid-template-rows:auto minmax(120px,1fr) auto auto auto}header{padding:10px 12px;background:#222;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button,label.btn{background:#f2f2f2;color:#111;border:0;border-radius:9px;padding:9px 11px;font-weight:700;font-size:14px}input[type=file]{display:none}#stage{position:relative;min-height:0}canvas{display:block;width:100%;height:100%}#panel{background:#222;padding:9px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#panel label{font-size:11px;color:#bbb}#panel input{width:100%;box-sizing:border-box;margin-top:3px;padding:7px;border:0;border-radius:7px}#status{font-size:12px;color:#bbb;flex:1;min-width:120px}#materials{background:#222;padding:10px;border-top:1px solid #333;overflow:auto}#materials .matgrid{grid-template-columns:repeat(6,minmax(80px,1fr))}#materials h3{margin:0 0 8px;font-size:14px}.matgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mat{border:1px solid #555;background:#333;color:#fff;border-radius:8px;padding:6px;font-size:11px}.sw{height:38px;border-radius:6px;margin-bottom:4px;background-size:cover;background-position:center}#materials small{color:#aaa}#aiModal{position:absolute;inset:12px;background:#171717f5;border:1px solid #555;border-radius:14px;z-index:20;padding:14px;display:none;overflow:auto}#aiModal.open{display:block}#aiModal textarea,#aiModal input{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #555;background:#292929;color:#fff;font-size:14px}#aiModal textarea{min-height:90px;resize:vertical}#aiModal .row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}#aiModal .row>*{flex:1;min-width:130px}#aiPreview{width:100%;max-height:48vh;object-fit:contain;background:#0d0d0d;border-radius:10px;margin-top:10px;display:none}#aiNote{font-size:12px;color:#bbb;line-height:1.35}.primary{background:#ffd36a!important}.danger{background:#444!important;color:#fff!important}
 </style>
 </head>
 <body><div id="app">
 <header>
 <label class="btn">Adicionar GLB/GLTF<input id="file" type="file" accept=".glb,.gltf" /></label>
-<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="edgeEdit" style="background:#9be6d1">Editar arestas</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
+<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="extrudeMode" style="background:#ffce79">Extrusão</button><button id="edgeEdit" style="background:#9be6d1">Editar arestas</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
 <input id="texture" type="file" accept="image/*"/><label class="btn" for="texture">+ Material MDF</label>
 <span id="status">Toque em um módulo para editar.</span>
 </header>
@@ -26,6 +26,7 @@ html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#f
 <img id="aiPreview" alt="Prévia do render gerado por IA">
 <div class="row"><button id="saveAI" disabled>Salvar / Compartilhar</button><button id="openAI" disabled>Abrir imagem</button><button id="againAI" disabled>Renderizar novamente</button></div>
 </div></div>
+<div id="extrudePanel" style="display:none;background:#292929;padding:10px;border-top:1px solid #555"><b>Extrusão de face</b><div style="font-size:12px;color:#bbb;margin:5px 0">Toque em uma face plana de um módulo para criar uma extensão. Ajuste a profundidade ou arraste o ponto laranja.</div><label>Profundidade (m) <input id="extrudeDepth" type="number" min="0.01" step="0.05" value="0.30" style="width:90px;padding:8px;border-radius:8px"></label> <button id="extrudeApply">Aplicar profundidade</button> <button id="extrudeExit">Concluir</button></div>
 <div id="panel">
 <label>Largura (m)<input id="sx" type="number" step="0.05" value="1"></label>
 <label>Altura (m)<input id="sy" type="number" step="0.05" value="1"></label>
@@ -105,6 +106,44 @@ renderer.domElement.addEventListener('pointermove',dragEdge);
 renderer.domElement.addEventListener('pointerup',endEdgeDrag);
 renderer.domElement.addEventListener('pointercancel',endEdgeDrag);
 let selected=null; const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
+let extrudeMode=false, extrudeCurrent=null, extrudeDrag=null;
+const extrudeButton=document.querySelector('#extrudeMode');
+const extrudePanel=document.querySelector('#extrudePanel');
+const extrudeHandle=new THREE.Mesh(new THREE.SphereGeometry(.095,16,12),new THREE.MeshBasicMaterial({color:0xffa000,depthTest:false}));
+extrudeHandle.renderOrder=1000;extrudeHandle.userData.resizeHelper=true;extrudeHandle.visible=false;scene.add(extrudeHandle);
+function refreshExtrudeHandle(){if(!extrudeMode||!extrudeCurrent){extrudeHandle.visible=false;return}const {mesh,axis,sign}=extrudeCurrent;mesh.updateMatrixWorld(true);const local=new THREE.Vector3();local[axis]=sign*.5;extrudeHandle.position.copy(mesh.localToWorld(local));extrudeHandle.visible=true;}
+function endExtrudeMode(){extrudeMode=false;extrudeDrag=null;extrudeButton.style.background='#ffce79';extrudePanel.style.display='none';extrudeHandle.visible=false;controls.enabled=true;}
+extrudeButton.onclick=()=>{if(extrudeMode){endExtrudeMode();return}if(edgeMode)edgeButton.click();transform.detach();extrudeCurrent=null;extrudeMode=true;extrudeButton.style.background='#ff9b18';extrudePanel.style.display='block';status.textContent='Extrusão: toque na face do módulo que deseja prolongar.'};
+document.querySelector('#extrudeExit').onclick=()=>{endExtrudeMode();if(selected)transform.attach(selected)};
+function updateExtrudeDepth(value){if(!extrudeCurrent)return;const {mesh,axis,sign,base,origin}=extrudeCurrent;const depth=Math.max(.01,Number(value)||.01);mesh.scale[axis]=depth;mesh.position.copy(origin);mesh.position[axis]+=sign*depth/2;mesh.updateMatrixWorld(true);document.querySelector('#extrudeDepth').value=depth.toFixed(2);refreshExtrudeHandle();}
+document.querySelector('#extrudeApply').onclick=()=>updateExtrudeDepth(document.querySelector('#extrudeDepth').value);
+function createFaceExtrusion(hit){
+ const target=hit.object;
+ if(!target.isMesh||!target.geometry||!target.geometry.boundingBox&&target.geometry.computeBoundingBox===undefined)return false;
+ target.geometry.computeBoundingBox();const b=target.geometry.boundingBox;if(!b||b.isEmpty())return false;
+ const n=hit.face.normal.clone();const axes=['x','y','z'];let axis=axes.reduce((best,a)=>Math.abs(n[a])>Math.abs(n[best])?a:best,'x');const sign=n[axis]>=0?1:-1;
+ // Extrusão de bloco: a face do objeto é prolongada como um volume novo, sem alterar a malha original.
+ const size=b.getSize(new THREE.Vector3()).multiply(target.scale);const worldScale=new THREE.Vector3();target.getWorldScale(worldScale);
+ const dims=b.getSize(new THREE.Vector3());const depth=Math.max(.01,Number(document.querySelector('#extrudeDepth').value)||.3);
+ const shape=new THREE.BoxGeometry(axis==='x'?1:dims.x,axis==='y'?1:dims.y,axis==='z'?1:dims.z);
+ const material=Array.isArray(target.material)?target.material[0].clone():target.material.clone();
+ const ext=new THREE.Mesh(shape,material);ext.castShadow=true;ext.receiveShadow=true;ext.userData.editable=true;ext.userData.extruded=true;
+ const center=b.getCenter(new THREE.Vector3());const origin=center.clone();origin[axis]=sign>0?b.max[axis]:b.min[axis];
+ ext.position.copy(origin);ext.scale[axis]=depth;ext.position[axis]+=sign*depth/2;
+ target.add(ext);extrudeCurrent={mesh:ext,axis,sign,origin};
+ document.querySelector('#extrudeDepth').value=depth.toFixed(2);refreshExtrudeHandle();status.textContent='Extensão criada! Arraste o ponto laranja ou ajuste a profundidade.';return true;
+}
+function beginExtrudeHandle(e){if(!extrudeMode||!extrudeHandle.visible)return false;pointerRay(e);if(!ray.intersectObject(extrudeHandle,false).length)return false;
+ const axis=extrudeCurrent.axis,sign=extrudeCurrent.sign;const cameraDir=new THREE.Vector3();camera.getWorldDirection(cameraDir);const av=new THREE.Vector3();av[axis]=1;
+ let pn=cameraDir.clone().addScaledVector(av,-cameraDir.dot(av));if(pn.lengthSq()<.0001)pn=cameraDir.clone();pn.normalize();const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(pn,extrudeHandle.position);
+ const start=new THREE.Vector3();if(!ray.ray.intersectPlane(plane,start))return false;
+ extrudeDrag={plane,start,axis,sign,initial:extrudeCurrent.mesh.scale[axis]};controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();return true;
+}
+function moveExtrude(e){if(!extrudeDrag)return;pointerRay(e);const p=new THREE.Vector3();if(!ray.ray.intersectPlane(extrudeDrag.plane,p))return;const {axis,sign,initial,start}=extrudeDrag;const worldScale=new THREE.Vector3();extrudeCurrent.mesh.parent.getWorldScale(worldScale);const d=(p[axis]-start[axis])*sign/Math.max(.001,Math.abs(worldScale[axis]));updateExtrudeDepth(Math.max(.01,initial+d));}
+renderer.domElement.addEventListener('pointermove',moveExtrude);
+renderer.domElement.addEventListener('pointerup',e=>{if(extrudeDrag){extrudeDrag=null;controls.enabled=true;try{renderer.domElement.releasePointerCapture(e.pointerId)}catch(_){}}});
+renderer.domElement.addEventListener('pointercancel',()=>{extrudeDrag=null;controls.enabled=true});
+
 const materialDefs=[
  {name:'Branco',color:'#f4f4f1'},{name:'Areia',color:'#d8c7aa'},{name:'Cinza',color:'#8d8d89'},
  {name:'Preto',color:'#252525'},{name:'Carvalho',color:'#b88a55'},{name:'Freijó',color:'#a87543'}
@@ -197,12 +236,12 @@ document.querySelector('#runAI').onclick=runAIRender; document.querySelector('#a
 document.querySelector('#saveAI').onclick=async()=>{if(!lastAIImage)return;try{await saveOrShare(lastAIImage)}catch(e){aiStatus.textContent='Não foi possível salvar: '+e.message}};
 document.querySelector('#openAI').onclick=()=>{if(!lastAIImage)return;const blob=dataURLToBlob(lastAIImage);const url=URL.createObjectURL(blob);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),60000)};
 
-renderer.domElement.addEventListener('pointerdown',e=>{if(startEdgeDrag(e))return;const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&h.object!==grid&&!h.object.userData.resizeHelper);if(hits.length){let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o.userData.editable?o:hits[0].object)} });
+renderer.domElement.addEventListener('pointerdown',e=>{if(beginExtrudeHandle(e))return;if(startEdgeDrag(e))return;const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&h.object!==grid&&!h.object.userData.resizeHelper);if(hits.length){if(extrudeMode){createFaceExtrusion(hits[0]);return}let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o.userData.editable?o:hits[0].object)} });
 ['sx','sy','sz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.scale[['x','y','z'][i]]=Math.max(.05,+e.target.value||.05);refreshEdges(); if(i===1 && selected.geometry) selected.position.y=selected.scale.y/2});
 ['px','py','pz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.position[['x','y','z'][i]]=+e.target.value||0;refreshEdges()});
 document.querySelector('#ry').oninput=e=>{if(!selected)return;selected.rotation.y=THREE.MathUtils.degToRad(+e.target.value||0);refreshEdges()};
 document.querySelector('#delete').onclick=()=>{if(selected){transform.detach();scene.remove(selected);select(null)}};
 document.querySelector('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);new GLTFLoader().load(url,g=>{g.scene.userData.editable=true;g.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});scene.add(g.scene);select(g.scene);URL.revokeObjectURL(url)},undefined,err=>status.textContent='Erro ao abrir modelo: '+err.message)};
 document.querySelector('#texture').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!selected){status.textContent='Selecione um móvel antes de adicionar o material.';e.target.value='';return}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1);const mat=new THREE.MeshStandardMaterial({map:t,roughness:.65});applyMaterial(mat);addMaterialButton(f.name,'url('+url+')',()=>applyMaterial(mat));status.textContent='Material adicionado: '+f.name},undefined,err=>status.textContent='Erro ao carregar material: '+err.message);e.target.value=''};
-addBox(); (function loop(){requestAnimationFrame(loop);controls.update();if(edgeMode&&!edgeDrag)refreshEdges();renderer.render(scene,camera)})();
+addBox(); (function loop(){requestAnimationFrame(loop);controls.update();if(edgeMode&&!edgeDrag)refreshEdges();if(extrudeMode&&extrudeCurrent&&!extrudeDrag)refreshExtrudeHandle();renderer.render(scene,camera)})();
 </script></body></html>
