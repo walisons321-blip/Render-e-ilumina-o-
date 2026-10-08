@@ -11,7 +11,7 @@ html,body{margin:0;height:100%;font-family:system-ui;background:#151515;color:#f
 <body><div id="app">
 <header>
 <label class="btn">Adicionar GLB/GLTF<input id="file" type="file" accept=".glb,.gltf" /></label>
-<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
+<button id="addBox">Módulo teste</button><button id="addLight">+ Luz</button><button id="move">Mover</button><button id="edgeEdit" style="background:#9be6d1">Editar arestas</button><button id="rotate">Rotacionar</button><button id="renderBtn">Renderizar PNG</button><button id="aiRenderBtn" class="primary">✨ Renderizar com IA</button><button id="delete">Excluir</button>
 <input id="texture" type="file" accept="image/*"/><label class="btn" for="texture">+ Material MDF</label>
 <span id="status">Toque em um módulo para editar.</span>
 </header>
@@ -51,10 +51,59 @@ const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:tru
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0xdedbd3);
 const camera=new THREE.PerspectiveCamera(50,1,.01,100); camera.position.set(4,3,5);
 const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.target.set(0,1,0);
-const transform=new TransformControls(camera,renderer.domElement); scene.add(transform); transform.setMode('translate'); transform.addEventListener('dragging-changed',e=>controls.enabled=!e.value); transform.addEventListener('objectChange',()=>syncFields());
+const transform=new TransformControls(camera,renderer.domElement); scene.add(transform); transform.setMode('translate'); transform.addEventListener('dragging-changed',e=>controls.enabled=!e.value); transform.addEventListener('objectChange',()=>{syncFields();refreshEdges()});
 const ambient=new THREE.HemisphereLight(0xffffff,0x666666,1.2); scene.add(ambient); const dl=new THREE.DirectionalLight(0xffffff,3); dl.position.set(3,6,4); dl.castShadow=true; scene.add(dl);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0xb8b2a7,roughness:.9})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 const grid=new THREE.GridHelper(20,40,0x777777,0xaaaaaa); grid.position.y=.002; scene.add(grid);
+let edgeMode=false, edgeDrag=null;
+const edgeGroup=new THREE.Group(); edgeGroup.userData.resizeHelper=true; scene.add(edgeGroup);
+const edgeHandles=[];
+for(const axis of ['x','y','z'])for(const sign of [-1,1]){
+ const handle=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),new THREE.MeshBasicMaterial({color:0x00e5bf,depthTest:false}));
+ handle.renderOrder=999;handle.userData.resizeHelper=true;handle.userData.axis=axis;handle.userData.sign=sign;
+ edgeGroup.add(handle);edgeHandles.push(handle);
+}
+edgeGroup.visible=false;
+function boundsOfSelection(){if(!selected||selected.userData.isLight)return null;return new THREE.Box3().setFromObject(selected)}
+function refreshEdges(){
+ const b=edgeMode?boundsOfSelection():null;
+ edgeGroup.visible=!!b&&!b.isEmpty();if(!edgeGroup.visible)return;
+ const c=b.getCenter(new THREE.Vector3());const sz=b.getSize(new THREE.Vector3());
+ for(const h of edgeHandles){h.position.copy(c);h.position[h.userData.axis]+=h.userData.sign*sz[h.userData.axis]/2;}
+}
+function pointerRay(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera)}
+function startEdgeDrag(e){
+ if(!edgeMode||!edgeGroup.visible)return false;
+ pointerRay(e);const hits=ray.intersectObjects(edgeHandles,false);if(!hits.length)return false;
+ const h=hits[0].object, axis=h.userData.axis, sign=h.userData.sign;
+ const b=boundsOfSelection(), center=b.getCenter(new THREE.Vector3()), size=b.getSize(new THREE.Vector3());
+ const cameraDir=new THREE.Vector3();camera.getWorldDirection(cameraDir);
+ const axisVec=new THREE.Vector3();axisVec[axis]=1;
+ const planeNormal=cameraDir.clone().addScaledVector(axisVec,-cameraDir.dot(axisVec)).normalize();
+ if(planeNormal.lengthSq()<.001)planeNormal.copy(cameraDir);
+ const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal,h.getWorldPosition(new THREE.Vector3()));
+ const start=new THREE.Vector3();if(!ray.ray.intersectPlane(plane,start))return false;
+ edgeDrag={axis,sign,plane,start,initialSize:size[axis],initialScale:selected.scale[axis],initialPosition:selected.position.clone(),initialCenter:center};
+ controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();return true;
+}
+function dragEdge(e){
+ if(!edgeDrag)return;pointerRay(e);
+ const p=new THREE.Vector3();if(!ray.ray.intersectPlane(edgeDrag.plane,p))return;
+ const d=(p[edgeDrag.axis]-edgeDrag.start[edgeDrag.axis])*edgeDrag.sign;
+ const newSize=Math.max(.05,edgeDrag.initialSize+d);
+ selected.scale[edgeDrag.axis]=edgeDrag.initialScale*(newSize/Math.max(.00001,edgeDrag.initialSize));
+ // Desloca o centro metade da variação, mantendo a face oposta fixa.
+ selected.position.copy(edgeDrag.initialPosition);
+ selected.position[edgeDrag.axis]+=edgeDrag.sign*(newSize-edgeDrag.initialSize)/2;
+ selected.updateMatrixWorld(true);refreshEdges();syncFields();
+ status.textContent='Ajustando '+({x:'largura',y:'altura',z:'profundidade'}[edgeDrag.axis])+': '+newSize.toFixed(2)+' m';
+}
+function endEdgeDrag(e){if(!edgeDrag)return;edgeDrag=null;controls.enabled=true;try{renderer.domElement.releasePointerCapture(e.pointerId)}catch(_){}refreshEdges()}
+const edgeButton=document.querySelector('#edgeEdit');
+edgeButton.onclick=()=>{edgeMode=!edgeMode;edgeButton.style.background=edgeMode?'#00cfa6':'#f2f2f2';transform.detach();if(!edgeMode&&selected)transform.attach(selected);refreshEdges();status.textContent=edgeMode?'Modo arestas: arraste as bolinhas verdes nas faces do móvel.':'Modo arestas desligado.'};
+renderer.domElement.addEventListener('pointermove',dragEdge);
+renderer.domElement.addEventListener('pointerup',endEdgeDrag);
+renderer.domElement.addEventListener('pointercancel',endEdgeDrag);
 let selected=null; const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
 const materialDefs=[
  {name:'Branco',color:'#f4f4f1'},{name:'Areia',color:'#d8c7aa'},{name:'Cinza',color:'#8d8d89'},
@@ -67,7 +116,7 @@ materialDefs.forEach(m=>addMaterialButton(m.name,m.color,()=>applyMaterial(new T
 
 function fit(){const r=stage.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix()} addEventListener('resize',fit); fit();
 function syncFields(){if(!selected)return;document.querySelector('#sx').value=selected.scale.x.toFixed(2);document.querySelector('#sy').value=selected.scale.y.toFixed(2);document.querySelector('#sz').value=selected.scale.z.toFixed(2);document.querySelector('#px').value=selected.position.x.toFixed(2);document.querySelector('#py').value=selected.position.y.toFixed(2);document.querySelector('#pz').value=selected.position.z.toFixed(2);document.querySelector('#ry').value=THREE.MathUtils.radToDeg(selected.rotation.y).toFixed(1)}
-function select(o){selected=o; status.textContent=o?(o.userData.isLight?'Luz selecionada. Mova e ajuste intensidade/cor abaixo.':'Módulo selecionado. Use Mover/Rotacionar ou os campos abaixo.'):'Nenhum objeto selecionado.'; transform.detach(); if(o){transform.attach(o);syncFields();syncLightFields()}}
+function select(o){selected=o; status.textContent=o?(o.userData.isLight?'Luz selecionada. Mova e ajuste intensidade/cor abaixo.':'Módulo selecionado. Use Mover/Rotacionar ou os campos abaixo.'):'Nenhum objeto selecionado.'; transform.detach(); if(o){if(!edgeMode)transform.attach(o);syncFields();syncLightFields()}refreshEdges()}
 function addBox(){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xd9c5a0,roughness:.65}));m.position.set(0,.5,0);m.castShadow=m.receiveShadow=true;m.userData.editable=true;scene.add(m);select(m)}
 document.querySelector('#addBox').onclick=addBox;
 function addLight(){
@@ -82,10 +131,10 @@ document.querySelector('#addLight').onclick=addLight;
 document.querySelector('#lightIntensity').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para ajustar a intensidade.';return}l.intensity=+e.target.value};
 document.querySelector('#ambientIntensity').oninput=e=>{ambient.intensity=+e.target.value;status.textContent='Claridade geral do ambiente ajustada.'};
 document.querySelector('#lightColor').oninput=e=>{const l=selectedLight();if(!l){status.textContent='Selecione uma luz para mudar a cor.';return}l.color.set(e.target.value);const b=selected.children.find(o=>o.userData.lightHelper);if(b)b.material.color.set(e.target.value)};
-document.querySelector('#move').onclick=()=>{transform.setMode('translate');status.textContent='Modo mover: arraste as setas do objeto.'};
-document.querySelector('#rotate').onclick=()=>{transform.setMode('rotate');status.textContent='Modo rotacionar: arraste os arcos do objeto.'};
+document.querySelector('#move').onclick=()=>{if(edgeMode)edgeButton.click();transform.setMode('translate');status.textContent='Modo mover: arraste as setas do objeto.'};
+document.querySelector('#rotate').onclick=()=>{if(edgeMode)edgeButton.click();transform.setMode('rotate');status.textContent='Modo rotacionar: arraste os arcos do objeto.'};
 document.querySelector('#renderBtn').onclick=()=>{
-  const oldGrid=grid.visible, oldTransform=transform.visible; const helpers=[]; scene.traverse(o=>{if(o.userData&&o.userData.lightHelper){helpers.push([o,o.visible]);o.visible=false}});
+  const oldGrid=grid.visible, oldTransform=transform.visible; const helpers=[]; scene.traverse(o=>{if(o.userData&&(o.userData.lightHelper||o.userData.resizeHelper)){helpers.push([o,o.visible]);o.visible=false}});
   grid.visible=false; transform.visible=false;
   renderer.render(scene,camera);
   try{
@@ -99,7 +148,7 @@ document.querySelector('#renderBtn').onclick=()=>{
 
 function captureSceneDataURL(maxSide=500){
   const oldGrid=grid.visible, oldTransform=transform.visible; const helpers=[];
-  scene.traverse(o=>{if(o.userData&&o.userData.lightHelper){helpers.push([o,o.visible]);o.visible=false}});
+  scene.traverse(o=>{if(o.userData&&(o.userData.lightHelper||o.userData.resizeHelper)){helpers.push([o,o.visible]);o.visible=false}});
   grid.visible=false; transform.visible=false; renderer.render(scene,camera);
   const source=renderer.domElement;
   const scale=Math.min(1,maxSide/Math.max(source.width,source.height));
@@ -148,12 +197,12 @@ document.querySelector('#runAI').onclick=runAIRender; document.querySelector('#a
 document.querySelector('#saveAI').onclick=async()=>{if(!lastAIImage)return;try{await saveOrShare(lastAIImage)}catch(e){aiStatus.textContent='Não foi possível salvar: '+e.message}};
 document.querySelector('#openAI').onclick=()=>{if(!lastAIImage)return;const blob=dataURLToBlob(lastAIImage);const url=URL.createObjectURL(blob);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),60000)};
 
-renderer.domElement.addEventListener('pointerdown',e=>{const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&h.object!==grid);if(hits.length){let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o.userData.editable?o:hits[0].object)} });
-['sx','sy','sz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.scale[['x','y','z'][i]]=Math.max(.05,+e.target.value||.05); if(i===1 && selected.geometry) selected.position.y=selected.scale.y/2});
-['px','py','pz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.position[['x','y','z'][i]]=+e.target.value||0});
-document.querySelector('#ry').oninput=e=>{if(!selected)return;selected.rotation.y=THREE.MathUtils.degToRad(+e.target.value||0)};
+renderer.domElement.addEventListener('pointerdown',e=>{if(startEdgeDrag(e))return;const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&h.object!==grid&&!h.object.userData.resizeHelper);if(hits.length){let o=hits[0].object;while(o.parent!==scene&&o.parent)o=o.parent;select(o.userData.editable?o:hits[0].object)} });
+['sx','sy','sz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.scale[['x','y','z'][i]]=Math.max(.05,+e.target.value||.05);refreshEdges(); if(i===1 && selected.geometry) selected.position.y=selected.scale.y/2});
+['px','py','pz'].forEach((id,i)=>document.querySelector('#'+id).oninput=e=>{if(!selected)return;selected.position[['x','y','z'][i]]=+e.target.value||0;refreshEdges()});
+document.querySelector('#ry').oninput=e=>{if(!selected)return;selected.rotation.y=THREE.MathUtils.degToRad(+e.target.value||0);refreshEdges()};
 document.querySelector('#delete').onclick=()=>{if(selected){transform.detach();scene.remove(selected);select(null)}};
 document.querySelector('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);new GLTFLoader().load(url,g=>{g.scene.userData.editable=true;g.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});scene.add(g.scene);select(g.scene);URL.revokeObjectURL(url)},undefined,err=>status.textContent='Erro ao abrir modelo: '+err.message)};
 document.querySelector('#texture').onchange=e=>{const f=e.target.files[0];if(!f)return;if(!selected){status.textContent='Selecione um móvel antes de adicionar o material.';e.target.value='';return}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1);const mat=new THREE.MeshStandardMaterial({map:t,roughness:.65});applyMaterial(mat);addMaterialButton(f.name,'url('+url+')',()=>applyMaterial(mat));status.textContent='Material adicionado: '+f.name},undefined,err=>status.textContent='Erro ao carregar material: '+err.message);e.target.value=''};
-addBox(); (function loop(){requestAnimationFrame(loop);controls.update();renderer.render(scene,camera)})();
+addBox(); (function loop(){requestAnimationFrame(loop);controls.update();if(edgeMode&&!edgeDrag)refreshEdges();renderer.render(scene,camera)})();
 </script></body></html>
